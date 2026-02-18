@@ -53,8 +53,6 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 
 /* ─── MAP ─── */
 #map { position: fixed; inset: 0; z-index: 0; }
-
-/* Trail planning cursor */
 body.trail-mode #map { cursor: crosshair; }
 
 /* ─── LEAFLET OVERRIDES ─── */
@@ -168,18 +166,12 @@ body.trail-mode #map { cursor: crosshair; }
 .ac-text { flex: 1; min-width: 0; }
 .ac-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ac-addr { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
-.ac-type { font-size: 11px; color: var(--blue); font-weight: 500; flex-shrink: 0; }
+.ac-type { font-size: 11px; color: var(--blue); font-weight: 500; flex-shrink: 0; max-width: 90px; text-align: right; }
 
-/* ─── LEFT CONTROLS ─── */
+/* ─── LEFT CONTROLS (vertical stack, bottom-left) ─── */
 #left-controls {
-  position: fixed; left: 16px; bottom: 100px;
+  position: fixed; left: 16px; bottom: 80px;
   z-index: 900; display: flex; flex-direction: column; gap: 8px;
-}
-
-/* ─── RIGHT CONTROLS ─── */
-#right-controls {
-  position: fixed; right: 16px; bottom: 100px;
-  z-index: 900; display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
 }
 
 .ctrl-btn {
@@ -195,20 +187,10 @@ body.trail-mode #map { cursor: crosshair; }
 .ctrl-btn.trail-active { background: var(--trail); border-color: var(--trail); color: white; }
 .ctrl-btn.trail-active:hover { background: #15803d; }
 
-.ctrl-btn-icon {
-  background: var(--white); border: 1.5px solid var(--border);
-  border-radius: 50%; width: 44px; height: 44px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary); box-shadow: var(--shadow-sm);
-  transition: all var(--tr); flex-shrink: 0;
-}
-.ctrl-btn-icon svg { width: 18px; height: 18px; }
-.ctrl-btn-icon:hover { box-shadow: var(--shadow-md); color: var(--blue); border-color: var(--blue); }
-
 /* ─── STYLE SWITCHER — ALWAYS AT BOTTOM ─── */
 #style-switcher {
   position: fixed;
-  bottom: 24px; /* FIXED — never moves */
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 900;
@@ -218,33 +200,48 @@ body.trail-mode #map { cursor: crosshair; }
   box-shadow: var(--shadow-md);
   border: 1.5px solid var(--border);
   padding: 4px; gap: 2px;
+  max-width: calc(100vw - 32px);
+  overflow-x: auto;
 }
 .style-pill-btn {
   padding: 7px 14px; border-radius: var(--radius-full); border: none;
   background: transparent; font-family: var(--font); font-size: 12px;
   font-weight: 600; color: var(--text-secondary); cursor: pointer;
   transition: all var(--tr); display: flex; align-items: center; gap: 5px; white-space: nowrap;
+  flex-shrink: 0;
 }
 .style-pill-btn:hover { color: var(--text-primary); background: var(--surface2); }
 .style-pill-btn.active { background: var(--blue); color: white; }
+.style-pill-btn.tf-key-btn { color: var(--orange); }
+.style-pill-btn.tf-key-btn:hover { background: var(--orange-light); }
 
-/* ─── ROUTE PANEL ─── */
+/* ─── ROUTE PANEL (redesigned: floating left card) ─── */
 #route-panel {
-  position: fixed; top: 0; left: 0; right: 0;
-  z-index: 1100; background: var(--white); box-shadow: var(--shadow-lg);
-  transform: translateY(-100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 10px;
+  position: fixed;
+  top: 70px;
+  left: 16px;
+  z-index: 1100;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1.5px solid var(--border);
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px 16px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  opacity: 0;
+  transform: translateX(-16px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
-#route-panel.open { transform: translateY(0); }
+#route-panel.open { opacity: 1; transform: translateX(0); pointer-events: all; }
 
 #route-panel-header { display: flex; align-items: center; gap: 10px; }
-#route-panel-title { font-size: 15px; font-weight: 600; color: var(--text-primary); flex: 1; }
+#route-panel-title { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; }
 #route-close {
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
   background: var(--surface2); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary); font-size: 16px; transition: background var(--tr);
+  color: var(--text-secondary); font-size: 14px; transition: background var(--tr);
 }
 #route-close:hover { background: var(--border); color: var(--red); }
 
@@ -296,10 +293,10 @@ body.trail-mode #map { cursor: crosshair; }
 .route-ac-item:hover { background: var(--blue-light); color: var(--blue); }
 .route-ac-item small { color: var(--text-muted); font-size: 11px; display: block; }
 
-#route-options { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#route-options { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
 .transport-btn {
-  padding: 6px 12px; border-radius: var(--radius-full);
+  padding: 6px 11px; border-radius: var(--radius-full);
   border: 1.5px solid var(--border); background: transparent;
   font-family: var(--font); font-size: 12px; font-weight: 600;
   color: var(--text-secondary); cursor: pointer;
@@ -309,13 +306,13 @@ body.trail-mode #map { cursor: crosshair; }
 .transport-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
 
 #go-btn {
-  margin-left: auto; padding: 9px 22px; border-radius: var(--radius-full);
+  margin-left: auto; padding: 8px 18px; border-radius: var(--radius-full);
   border: none; background: var(--green); color: white;
   font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
   box-shadow: 0 2px 10px rgba(5,150,105,0.35); transition: all var(--tr);
 }
-#go-btn:hover { background: #047857; box-shadow: 0 4px 16px rgba(5,150,105,0.45); }
+#go-btn:hover { background: #047857; }
 #go-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── NAV BAR ─── */
@@ -345,43 +342,102 @@ body.trail-mode #map { cursor: crosshair; }
 }
 #nav-stop-btn:hover { background: rgba(255,255,255,0.25); }
 
-/* ─── ROUTE SUMMARY CARD ─── */
+/* ─── ROUTE SUMMARY CARD (cleaned up compact strip) ─── */
 #route-summary-card {
   position: fixed; bottom: 80px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   opacity: 0; pointer-events: none; z-index: 900;
   background: var(--white); border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl); border: 1px solid var(--border);
-  padding: 16px 20px;
-  min-width: 300px; max-width: min(420px, calc(100vw - 32px));
+  padding: 10px 14px;
+  min-width: 320px; max-width: min(480px, calc(100vw - 32px));
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 #route-summary-card.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
-#route-summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.route-stat-big { flex: 1; }
-.route-stat-big .val {
-  font-size: 26px; font-weight: 700; color: var(--text-primary);
-  line-height: 1; font-family: var(--font-serif); font-style: italic;
+
+#rsc-info {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
 }
-.route-stat-big .lbl {
-  font-size: 11px; color: var(--text-muted); font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px;
-}
-.route-summary-divider { width: 1px; height: 40px; background: var(--border); }
-#route-summary-actions { display: flex; gap: 8px; }
-.route-action-btn {
-  flex: 1; padding: 10px; border-radius: var(--radius-md);
+#rsc-profile { font-size: 18px; flex-shrink: 0; }
+#rsc-time { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.rsc-sep { color: var(--text-muted); font-size: 14px; }
+#rsc-dist { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+#rsc-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.rsc-btn {
+  padding: 7px 12px; border-radius: var(--radius-full);
   border: 1.5px solid var(--border); background: transparent;
-  font-family: var(--font); font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: all var(--tr); text-align: center; color: var(--text-primary);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); color: var(--text-primary);
+  white-space: nowrap;
 }
-.route-action-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
-.route-action-btn.primary { background: var(--green); border-color: var(--green); color: white; }
-.route-action-btn.primary:hover { background: #047857; border-color: #047857; }
+.rsc-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.rsc-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.rsc-btn.primary { background: var(--green); border-color: var(--green); color: white; }
+.rsc-btn.primary:hover { background: #047857; border-color: #047857; }
+
+/* ─── INSTRUCTIONS PANEL ─── */
+#instructions-panel {
+  position: fixed;
+  right: -380px;
+  top: 16px;
+  bottom: 80px;
+  width: min(360px, calc(100vw - 32px));
+  z-index: 950;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1.5px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+#instructions-panel.open { right: 16px; }
+#instr-header {
+  padding: 14px 16px 10px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+#instr-title { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; }
+#instr-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 14px; transition: background var(--tr);
+}
+#instr-close:hover { background: var(--border); color: var(--red); }
+#instr-list { overflow-y: auto; flex: 1; padding: 8px 0; }
+.instr-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border-light);
+  transition: background var(--tr); cursor: default;
+}
+.instr-step:last-child { border-bottom: none; }
+.instr-step:hover { background: var(--bg); }
+.instr-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue-light); border: 1.5px solid var(--blue-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--blue); flex-shrink: 0; margin-top: 1px;
+}
+.instr-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
+.instr-text-wrap { flex: 1; min-width: 0; }
+.instr-text { font-size: 13px; font-weight: 500; color: var(--text-primary); line-height: 1.4; }
+.instr-dist { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
 /* ─── POPUP STYLES ─── */
-.map-popup { padding: 14px 16px; min-width: 220px; max-width: 280px; }
-.map-popup-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; line-height: 1.3; }
+.map-popup { padding: 12px 14px; min-width: 200px; max-width: 260px; }
+.map-popup-header { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+.map-popup-title { font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.3; flex: 1; }
+.map-popup-close {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 12px; flex-shrink: 0;
+  transition: background var(--tr); margin-top: -1px;
+}
+.map-popup-close:hover { background: var(--border); color: var(--red); }
 .map-popup-addr { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px; }
 .map-popup-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
 .map-popup-tag {
@@ -391,7 +447,7 @@ body.trail-mode #map { cursor: crosshair; }
 }
 .map-popup-actions { display: flex; gap: 6px; border-top: 1px solid var(--border-light); padding-top: 10px; }
 .map-popup-btn {
-  flex: 1; padding: 7px 8px; border-radius: var(--radius-sm);
+  flex: 1; padding: 6px 8px; border-radius: var(--radius-sm);
   border: 1.5px solid var(--border); background: transparent;
   font-family: var(--font); font-size: 12px; font-weight: 600;
   cursor: pointer; text-align: center; transition: all var(--tr); color: var(--text-primary);
@@ -437,7 +493,6 @@ body.trail-mode #map { cursor: crosshair; }
 #poi-card-actions { padding: 10px 16px 14px; display: flex; gap: 7px; border-top: 1px solid var(--border-light); }
 
 /* ─── TRAIL FLOATING BAR ─── */
-/* Compact pill anchored bottom-left, stays out of the way */
 #trail-panel {
   position: fixed;
   bottom: 80px;
@@ -446,7 +501,7 @@ body.trail-mode #map { cursor: crosshair; }
   display: flex;
   flex-direction: column;
   gap: 6px;
-  pointer-events: none; /* children re-enable */
+  pointer-events: none;
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -457,7 +512,6 @@ body.trail-mode #map { cursor: crosshair; }
   pointer-events: all;
 }
 
-/* Main compact bar */
 #trail-bar {
   display: flex;
   align-items: center;
@@ -470,7 +524,6 @@ body.trail-mode #map { cursor: crosshair; }
   height: 44px;
 }
 
-/* Transport section (left) */
 #trail-transport-row {
   display: flex;
   gap: 1px;
@@ -485,7 +538,6 @@ body.trail-mode #map { cursor: crosshair; }
   font-size: 15px; cursor: pointer;
   transition: all var(--tr);
   display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary);
 }
 .trail-transport-btn:hover { background: var(--surface2); }
 .trail-transport-btn.active {
@@ -493,7 +545,6 @@ body.trail-mode #map { cursor: crosshair; }
   box-shadow: 0 1px 6px rgba(22,163,74,0.4);
 }
 
-/* Stats section (middle) */
 #trail-stats-inline {
   display: flex;
   align-items: center;
@@ -520,7 +571,6 @@ body.trail-mode #map { cursor: crosshair; }
   font-weight: 500;
 }
 
-/* Points badge — clickable to toggle waypoint list */
 #trail-pts-badge {
   display: inline-flex;
   align-items: center;
@@ -538,14 +588,12 @@ body.trail-mode #map { cursor: crosshair; }
   user-select: none;
 }
 #trail-pts-badge:hover { background: var(--trail-mid); }
-#trail-pts-badge.has-pts { animation: none; }
 .trail-pulse {
   width: 6px; height: 6px; border-radius: 50%; background: var(--trail);
   animation: tpulse 1.4s ease-in-out infinite; flex-shrink: 0;
 }
 @keyframes tpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
-/* Action buttons (right) */
 #trail-actions-row {
   display: flex;
   align-items: center;
@@ -576,7 +624,7 @@ body.trail-mode #map { cursor: crosshair; }
 .trail-action-btn.success:hover { background: #15803d; }
 .trail-action-btn.success:disabled { background: var(--border); color: var(--text-muted); }
 
-/* Waypoint list panel — slides up above the bar */
+/* Waypoint list panel */
 #trail-waypoints-panel {
   background: var(--white);
   border-radius: var(--radius-xl);
@@ -644,20 +692,60 @@ body.trail-mode #map { cursor: crosshair; }
 .trail-wp-item:hover .trail-wp-remove { opacity: 1; }
 .trail-wp-remove:hover { background: var(--red-light); color: var(--red); }
 
-/* ─── TRAIL SUMMARY CARD ─── */
+/* ─── TRAIL SUMMARY CARD — compact horizontal strip ─── */
 #trail-summary-card {
   position: fixed; bottom: 80px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   opacity: 0; pointer-events: none; z-index: 900;
   background: var(--white); border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl); border: 1px solid var(--trail);
-  padding: 16px 20px;
-  min-width: 320px; max-width: min(440px, calc(100vw - 32px));
+  box-shadow: var(--shadow-xl); border: 1.5px solid var(--trail);
+  padding: 8px 10px 8px 14px;
+  min-width: 0; max-width: min(620px, calc(100vw - 32px));
+  width: max-content;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 #trail-summary-card.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
-#trail-summary-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-#trail-summary-card-title { font-size: 15px; font-weight: 700; color: var(--trail); flex: 1; }
+
+/* Left info strip */
+#tsc-info {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+#tsc-icon { font-size: 16px; }
+#tsc-dist { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.tsc-sep { color: var(--text-muted); font-size: 13px; }
+#tsc-time { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+#tsc-pts  { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* divider */
+.tsc-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+/* Action buttons */
+#tsc-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.tsc-btn {
+  padding: 6px 10px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); color: var(--text-primary);
+  white-space: nowrap; display: flex; align-items: center; gap: 4px;
+}
+.tsc-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.tsc-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.tsc-btn.primary { background: var(--trail); border-color: var(--trail); color: white; }
+.tsc-btn.primary:hover { background: #15803d; border-color: #15803d; }
+.tsc-btn.icon-only { padding: 6px 8px; }
+
+/* Keep .route-action-btn for any leftover uses */
+.route-action-btn {
+  flex: 1; padding: 9px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); text-align: center; color: var(--text-primary);
+}
+.route-action-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.route-action-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.route-action-btn.primary { background: var(--green); border-color: var(--green); color: white; }
+.route-action-btn.primary:hover { background: #047857; border-color: #047857; }
 
 /* ─── CUSTOM MARKERS ─── */
 .custom-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
@@ -670,7 +758,6 @@ body.trail-mode #map { cursor: crosshair; }
 .marker-emoji { font-size: 16px; transform: rotate(45deg); line-height: 1; }
 .marker-shadow { width: 10px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 50%; margin-top: 2px; }
 
-/* Trail numbered markers */
 .trail-marker-el {
   width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -756,6 +843,86 @@ body.trail-mode #map { cursor: crosshair; }
 }
 #coord-bar span { color: var(--text-secondary); font-weight: 600; }
 
+/* ─── MODAL OVERLAY ─── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 8000;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--white); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl); border: 1.5px solid var(--border);
+  padding: 24px; width: min(360px, calc(100vw - 32px));
+  display: flex; flex-direction: column; gap: 16px;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.modal-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.modal-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-md);
+  padding: 10px 14px; font-family: var(--font); font-size: 14px;
+  color: var(--text-primary); outline: none; transition: border-color var(--tr);
+}
+.modal-input:focus { border-color: var(--blue); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-btn {
+  padding: 9px 20px; border-radius: var(--radius-full); border: 1.5px solid var(--border);
+  font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all var(--tr); color: var(--text-primary); background: transparent;
+}
+.modal-btn:hover { border-color: var(--blue); color: var(--blue); }
+.modal-btn.primary { background: var(--blue); border-color: var(--blue); color: white; }
+.modal-btn.primary:hover { background: #1d4ed8; }
+.modal-btn.danger { color: var(--red); }
+.modal-btn.danger:hover { border-color: var(--red); background: var(--red-light); }
+
+/* Export zoom picker */
+.zoom-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.zoom-opt {
+  flex: 1; min-width: 60px; padding: 8px 12px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; text-align: center; transition: all var(--tr); color: var(--text-secondary);
+}
+.zoom-opt:hover { border-color: var(--blue); color: var(--blue); }
+.zoom-opt.selected { background: var(--blue); border-color: var(--blue); color: white; }
+
+/* GPX track style */
+.gpx-track { stroke: #7c3aed; stroke-width: 3; fill: none; opacity: 0.85; }
+
+/* ─── GPX INFO BAR ─── */
+#gpx-info-bar {
+  position: fixed; bottom: 80px; right: 16px; z-index: 900;
+  background: var(--white); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg); border: 1.5px solid var(--purple);
+  padding: 8px 12px 8px 14px;
+  display: none; align-items: center; gap: 10px;
+  max-width: min(340px, calc(100vw - 32px));
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0; transform: translateY(8px);
+}
+#gpx-info-bar.show { display: flex; opacity: 1; transform: translateY(0); }
+#gpx-info-icon { font-size: 16px; flex-shrink: 0; }
+#gpx-info-text { flex: 1; min-width: 0; }
+#gpx-info-name { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#gpx-info-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+#gpx-edit-btn {
+  padding: 6px 10px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--purple); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--purple); cursor: pointer; transition: all var(--tr); white-space: nowrap; flex-shrink: 0;
+}
+#gpx-edit-btn:hover { background: var(--purple-light); }
+#gpx-remove-btn {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 13px; flex-shrink: 0;
+  transition: background var(--tr);
+}
+#gpx-remove-btn:hover { background: var(--red-light); color: var(--red); }
+
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -796,7 +963,7 @@ body.trail-mode #map { cursor: crosshair; }
 <!-- Mode Hint -->
 <div id="mode-hint"></div>
 
-<!-- Left Controls -->
+<!-- Left Controls (includes locate button aligned in stack) -->
 <div id="left-controls">
   <button class="ctrl-btn" id="route-btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -820,32 +987,41 @@ body.trail-mode #map { cursor: crosshair; }
     </svg>
     Save PNG
   </button>
-</div>
-
-<!-- Right Controls -->
-<div id="right-controls">
-  <button class="ctrl-btn-icon" id="locate-btn" title="My Location">
+  <button class="ctrl-btn" id="gpx-load-btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>
     </svg>
+    Load GPX
+  </button>
+  <button class="ctrl-btn" id="locate-btn" title="My Location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </svg>
+    My Location
   </button>
 </div>
 
-<!-- Style Switcher — always at bottom, z-index below panels -->
+<!-- Hidden GPX file input -->
+<input type="file" id="gpx-file-input" accept=".gpx" style="display:none">
+
+<!-- Style Switcher -->
 <div id="style-switcher">
   <button class="style-pill-btn active" data-style="osm">🗺 Default</button>
   <button class="style-pill-btn" data-style="dark">🌙 Dark</button>
   <button class="style-pill-btn" data-style="satellite">🛰 Satellite</button>
   <button class="style-pill-btn" data-style="topo">🏔 Topo</button>
+  <button class="style-pill-btn tf-key-btn" id="tf-key-btn">🔑 Thunderforest</button>
 </div>
 
 <!-- Coord Bar -->
 <div id="coord-bar">Lat <span id="cb-lat">–</span> Lng <span id="cb-lng">–</span> Z<span id="cb-z">–</span></div>
 
-<!-- ═══ DIRECTIONS PANEL ═══ -->
+<!-- ═══ DIRECTIONS PANEL (floating card, top-left) ═══ -->
 <div id="route-panel">
   <div id="route-panel-header">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue);flex-shrink:0">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue);flex-shrink:0">
       <circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/>
       <path d="M5 8v3a2 2 0 002 2h10a2 2 0 012 2v1"/>
     </svg>
@@ -875,16 +1051,14 @@ body.trail-mode #map { cursor: crosshair; }
     <button class="transport-btn" data-profile="bike">🚲 Bike</button>
     <button class="transport-btn" data-profile="foot">🚶 Walk</button>
     <button id="go-btn" disabled>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
-      Start
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+      Go
     </button>
   </div>
 </div>
 
-<!-- ═══ TRAIL ROUTING BAR (compact floating) ═══ -->
+<!-- ═══ TRAIL ROUTING BAR ═══ -->
 <div id="trail-panel">
-
-  <!-- Waypoint list — slides up above bar when toggled -->
   <div id="trail-waypoints-panel">
     <div id="trail-wp-header">
       <span>Waypoints</span>
@@ -892,18 +1066,12 @@ body.trail-mode #map { cursor: crosshair; }
     </div>
     <div id="trail-waypoints-list"></div>
   </div>
-
-  <!-- The compact main bar -->
   <div id="trail-bar">
-
-    <!-- Transport mode -->
     <div id="trail-transport-row">
       <button class="trail-transport-btn active" data-tprofile="foot" title="Walk">🚶</button>
       <button class="trail-transport-btn" data-tprofile="bike" title="Cycle">🚲</button>
       <button class="trail-transport-btn" data-tprofile="car" title="Drive">🚗</button>
     </div>
-
-    <!-- Stats inline -->
     <div id="trail-stats-inline">
       <div class="trail-stat-inline">
         <span class="tv" id="ts-dist">—</span>
@@ -912,14 +1080,14 @@ body.trail-mode #map { cursor: crosshair; }
       <div class="trail-stat-inline" style="color:var(--text-muted);font-size:11px">·</div>
       <div class="trail-stat-inline">
         <span class="tv" id="ts-time">—</span>
+        <span class="tl">time</span>
       </div>
+      <div class="trail-stat-inline" style="color:var(--text-muted);font-size:11px">·</div>
       <div id="trail-pts-badge" title="Show waypoints">
         <div class="trail-pulse"></div>
         <span id="ts-points">0</span> pts
       </div>
     </div>
-
-    <!-- Action buttons -->
     <div id="trail-actions-row">
       <button class="trail-action-btn" id="trail-undo-btn" disabled title="Undo last point">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>
@@ -935,16 +1103,15 @@ body.trail-mode #map { cursor: crosshair; }
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-
   </div>
 </div>
 
-<!-- Nav Bar (turn-by-turn) -->
+<!-- Nav Bar -->
 <div id="nav-bar">
   <div id="nav-direction-icon">➡️</div>
   <div style="flex:1">
     <div id="nav-step-text">Head north</div>
-    <div id="nav-step-dist">Continue for 400m</div>
+    <div id="nav-step-dist">Continue for 400 m</div>
   </div>
   <div id="nav-stats">
     <div id="nav-eta">—</div>
@@ -953,40 +1120,48 @@ body.trail-mode #map { cursor: crosshair; }
   <button id="nav-stop-btn">✕ End</button>
 </div>
 
-<!-- Route Summary Card -->
+<!-- Route Summary Card (clean horizontal strip) -->
 <div id="route-summary-card">
-  <div id="route-summary-header">
-    <div class="route-stat-big"><div class="val" id="card-time">—</div><div class="lbl">Duration</div></div>
-    <div class="route-summary-divider"></div>
-    <div class="route-stat-big"><div class="val" id="card-dist">—</div><div class="lbl">Distance</div></div>
-    <div class="route-summary-divider"></div>
-    <div class="route-stat-big"><div class="val" id="card-profile">—</div><div class="lbl">Mode</div></div>
+  <div id="rsc-info">
+    <span id="rsc-profile">🚗</span>
+    <span id="rsc-time">—</span>
+    <span class="rsc-sep">·</span>
+    <span id="rsc-dist">—</span>
   </div>
-  <div id="route-summary-actions">
-    <button class="route-action-btn" id="card-edit-btn">✎ Edit</button>
-    <button class="route-action-btn" id="card-clear-btn" style="color:var(--red)">✕ Clear</button>
-    <button class="route-action-btn primary" id="card-go-btn">▶ Navigate</button>
+  <div id="rsc-actions">
+    <button class="rsc-btn" id="card-steps-btn">📋 Steps</button>
+    <button class="rsc-btn" id="card-edit-btn">✎ Edit</button>
+    <button class="rsc-btn danger" id="card-clear-btn">✕</button>
+    <button class="rsc-btn primary" id="card-go-btn">▶ Go</button>
   </div>
 </div>
 
-<!-- Trail Summary Card -->
+<!-- Instructions Panel -->
+<div id="instructions-panel">
+  <div id="instr-header">
+    <span id="instr-title">Turn-by-turn</span>
+    <button id="instr-close">✕</button>
+  </div>
+  <div id="instr-list"></div>
+</div>
+
+<!-- Trail Summary Card — horizontal strip -->
 <div id="trail-summary-card">
-  <div id="trail-summary-card-header">
-    <span style="font-size:20px">🥾</span>
-    <div id="trail-summary-card-title">Route Complete</div>
-    <button id="trail-summary-close" style="width:26px;height:26px;border-radius:50%;background:var(--surface2);border:none;cursor:pointer;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;">✕</button>
+  <div id="tsc-info">
+    <span id="tsc-icon">🥾</span>
+    <span id="tsc-dist">—</span>
+    <span class="tsc-sep">·</span>
+    <span id="tsc-time">—</span>
+    <span class="tsc-sep">·</span>
+    <span id="tsc-pts">— pts</span>
   </div>
-  <div id="route-summary-header" style="margin-bottom:12px;">
-    <div class="route-stat-big"><div class="val" id="trail-card-dist">—</div><div class="lbl">Distance</div></div>
-    <div class="route-summary-divider"></div>
-    <div class="route-stat-big"><div class="val" id="trail-card-time">—</div><div class="lbl">Est. Time</div></div>
-    <div class="route-summary-divider"></div>
-    <div class="route-stat-big"><div class="val" id="trail-card-pts">—</div><div class="lbl">Waypoints</div></div>
-  </div>
-  <div id="route-summary-actions">
-    <button class="route-action-btn" id="trail-card-edit-btn">✎ Edit Route</button>
-    <button class="route-action-btn danger" id="trail-card-clear-btn" style="color:var(--red)">✕ Discard</button>
-    <button class="route-action-btn primary" id="trail-card-nav-btn">▶ Navigate</button>
+  <div class="tsc-divider"></div>
+  <div id="tsc-actions">
+    <button class="tsc-btn" id="trail-card-steps-btn" title="Turn-by-turn">📋</button>
+    <button class="tsc-btn" id="trail-card-edit-btn" title="Edit route">✎ Edit</button>
+    <button class="tsc-btn" id="trail-card-gpx-btn" title="Save GPX">💾</button>
+    <button class="tsc-btn danger" id="trail-card-clear-btn" title="Clear route">✕</button>
+    <button class="tsc-btn primary" id="trail-card-nav-btn">▶ Go</button>
   </div>
 </div>
 
@@ -1007,6 +1182,31 @@ body.trail-mode #map { cursor: crosshair; }
   </div>
 </div>
 
+<!-- Thunderforest Key Modal -->
+<div class="modal-overlay" id="tf-modal">
+  <div class="modal-box">
+    <div class="modal-title">🔑 Thunderforest API Key</div>
+    <div class="modal-desc">Enter your Thunderforest API key to enable premium map styles (Landscape, Cycle, Transport, Outdoors).</div>
+    <input type="text" class="modal-input" id="tf-key-input" placeholder="Your API key…"/>
+    <div class="modal-actions">
+      <button class="modal-btn danger" id="tf-clear-btn">Clear Key</button>
+      <button class="modal-btn" id="tf-cancel-btn">Cancel</button>
+      <button class="modal-btn primary" id="tf-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- GPX Info Bar -->
+<div id="gpx-info-bar">
+  <span id="gpx-info-icon">🟣</span>
+  <div id="gpx-info-text">
+    <div id="gpx-info-name">GPX Track</div>
+    <div id="gpx-info-meta">—</div>
+  </div>
+  <button id="gpx-edit-btn">✎ Edit</button>
+  <button id="gpx-remove-btn" title="Remove GPX">✕</button>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1021,28 +1221,49 @@ body.trail-mode #map { cursor: crosshair; }
 // CONSTANTS & CONFIG
 // ════════════════════════════════════════════════════════════
 
-const STYLES = {
+const BASE_STYLES = {
   osm: {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    max: 19
+    max: 19, label: '🗺 Default'
   },
   dark: {
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, © <a href="https://carto.com">CARTO</a>',
-    max: 19
+    max: 19, label: '🌙 Dark'
   },
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attr: '© Esri, DigitalGlobe, GeoEye',
-    max: 18, noS: true
+    max: 18, noS: true, label: '🛰 Satellite'
   },
   topo: {
     url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
     attr: '© <a href="https://opentopomap.org">OpenTopoMap</a>',
-    max: 17
+    max: 17, label: '🏔 Topo'
   }
 };
+
+const TF_STYLES = {
+  tf_landscape: { url: 'https://tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={key}', attr: '© <a href="https://www.thunderforest.com">Thunderforest</a>, © OpenStreetMap contributors', max: 22, label: '🏔 Landscape' },
+  tf_cycle:     { url: 'https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey={key}', attr: '© <a href="https://www.thunderforest.com">Thunderforest</a>, © OpenStreetMap contributors', max: 22, label: '🚲 Cycle' },
+  tf_transport: { url: 'https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey={key}', attr: '© <a href="https://www.thunderforest.com">Thunderforest</a>, © OpenStreetMap contributors', max: 22, label: '🚌 Transport' },
+  tf_outdoors:  { url: 'https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey={key}', attr: '© <a href="https://www.thunderforest.com">Thunderforest</a>, © OpenStreetMap contributors', max: 22, label: '⛺ Outdoors' },
+  tf_atlas:     { url: 'https://tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey={key}', attr: '© <a href="https://www.thunderforest.com">Thunderforest</a>, © OpenStreetMap contributors', max: 22, label: '🗺 Atlas' },
+};
+
+let STYLES = { ...BASE_STYLES };
+let tfApiKey = localStorage.getItem('wf_tf_key') || '';
+
+function buildStyles() {
+  STYLES = { ...BASE_STYLES };
+  if (tfApiKey) {
+    for (const [id, s] of Object.entries(TF_STYLES)) {
+      STYLES[id] = { ...s, url: s.url.replace('{key}', tfApiKey) };
+    }
+  }
+}
+buildStyles();
 
 const POI_ICONS = {
   restaurant:'🍽️', cafe:'☕', bar:'🍺', pub:'🍺', fast_food:'🍔',
@@ -1063,7 +1284,8 @@ const PLAIN_TYPES = new Set([
   'road','residential','path','footway','cycleway','service',
   'motorway','trunk','primary','secondary','tertiary','unclassified',
   'living_street','administrative','postcode','neighbourhood','quarter',
-  'suburb','village','town','city','county','state','country'
+  'suburb','village','town','city','county','state','country',
+  'semidetached_house','detached','terrace','apartments','house','yes'
 ]);
 
 const DIRECTION_ICONS = {
@@ -1074,33 +1296,93 @@ const DIRECTION_ICONS = {
   Head:'⬆️', default:'⬆️'
 };
 
-// Trail waypoint colours (cycles through)
 const TRAIL_COLORS = [
   '#16a34a','#2563eb','#d97706','#dc2626','#7c3aed',
   '#0891b2','#be123c','#65a30d','#9333ea','#0284c7'
 ];
 
 // ════════════════════════════════════════════════════════════
-// MAP INIT
+// MAP INIT — restore last position from localStorage
 // ════════════════════════════════════════════════════════════
 
-const map = L.map('map', { center:[51.505,-0.09], zoom:13, zoomControl:false });
-L.control.zoom({ position:'bottomright' }).addTo(map);
+const savedCenter = JSON.parse(localStorage.getItem('wf_center') || 'null');
+const savedZoom   = parseInt(localStorage.getItem('wf_zoom') || '0', 10);
+const initCenter  = savedCenter || [51.505, -0.09];
+const initZoom    = savedZoom   || 13;
 
+const map = L.map('map', { center: initCenter, zoom: initZoom, zoomControl: false });
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+// Save position on move
+map.on('moveend zoomend', () => {
+  const c = map.getCenter();
+  localStorage.setItem('wf_center', JSON.stringify([c.lat, c.lng]));
+  localStorage.setItem('wf_zoom', String(map.getZoom()));
+});
+
+let currentStyleId = 'osm';
 let tileLayer = null;
+
 function setStyle(id) {
   const s = STYLES[id];
   if (!s) return;
   if (tileLayer) map.removeLayer(tileLayer);
-  const opts = { attribution:s.attr, maxZoom:s.max, crossOrigin:true };
+  const opts = { attribution: s.attr, maxZoom: s.max, crossOrigin: true };
   if (!s.noS) opts.subdomains = 'abc';
   tileLayer = L.tileLayer(s.url, opts).addTo(map);
-  document.querySelectorAll('.style-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.style === id));
+  currentStyleId = id;
+  document.querySelectorAll('.style-pill-btn:not(.tf-key-btn)').forEach(b => b.classList.toggle('active', b.dataset.style === id));
 }
 setStyle('osm');
 
-document.querySelectorAll('.style-pill-btn').forEach(btn => {
+// Style switcher
+document.querySelectorAll('.style-pill-btn:not(.tf-key-btn)').forEach(btn => {
   btn.addEventListener('click', () => setStyle(btn.dataset.style));
+});
+
+// Build TF style buttons
+function renderTFButtons() {
+  document.querySelectorAll('.tf-style-btn').forEach(b => b.remove());
+  if (!tfApiKey) return;
+  const switcher = document.getElementById('style-switcher');
+  const keyBtn = document.getElementById('tf-key-btn');
+  for (const [id, s] of Object.entries(TF_STYLES)) {
+    const btn = document.createElement('button');
+    btn.className = 'style-pill-btn tf-style-btn';
+    btn.dataset.style = id;
+    btn.textContent = s.label;
+    btn.addEventListener('click', () => setStyle(id));
+    switcher.insertBefore(btn, keyBtn);
+  }
+}
+renderTFButtons();
+
+// Thunderforest modal
+document.getElementById('tf-key-btn').addEventListener('click', () => {
+  document.getElementById('tf-key-input').value = tfApiKey;
+  document.getElementById('tf-modal').classList.add('show');
+});
+document.getElementById('tf-cancel-btn').addEventListener('click', () => document.getElementById('tf-modal').classList.remove('show'));
+document.getElementById('tf-save-btn').addEventListener('click', () => {
+  const key = document.getElementById('tf-key-input').value.trim();
+  if (!key) { toast('Please enter an API key'); return; }
+  tfApiKey = key;
+  localStorage.setItem('wf_tf_key', key);
+  buildStyles();
+  renderTFButtons();
+  document.getElementById('tf-modal').classList.remove('show');
+  toast('Thunderforest key saved ✓');
+});
+document.getElementById('tf-clear-btn').addEventListener('click', () => {
+  tfApiKey = '';
+  localStorage.removeItem('wf_tf_key');
+  buildStyles();
+  document.querySelectorAll('.tf-style-btn').forEach(b => b.remove());
+  if (['tf_landscape','tf_cycle','tf_transport','tf_outdoors','tf_atlas'].includes(currentStyleId)) {
+    setStyle('osm');
+  }
+  document.getElementById('tf-modal').classList.remove('show');
+  toast('Thunderforest key cleared');
 });
 
 // Coord bar
@@ -1129,8 +1411,13 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// Always show km in decimal form
 function fmtDist(m) {
-  return m >= 1000 ? `${(m/1000).toFixed(1)}km` : `${Math.round(m)}m`;
+  const km = m / 1000;
+  if (km >= 10) return `${km.toFixed(1)} km`;
+  if (km >= 1)  return `${km.toFixed(2)} km`;
+  if (km >= 0.1) return `${km.toFixed(2)} km`;
+  return `${Math.round(m)} m`;
 }
 
 function fmtTime(s) {
@@ -1147,6 +1434,27 @@ function hideHint() {
   document.getElementById('mode-hint').classList.remove('show');
 }
 
+// Humanize OSM tags → normal readable words
+function humanizeTag(tag) {
+  if (!tag) return '';
+  const overrides = {
+    semidetached_house: 'Semi-Detached House', detached: 'Detached House',
+    fast_food: 'Fast Food', sports_centre: 'Sports Centre', place_of_worship: 'Place of Worship',
+    bus_station: 'Bus Station', train_station: 'Train Station', ferry_terminal: 'Ferry Terminal',
+    arts_centre: 'Arts Centre', tourist_attraction: 'Tourist Attraction', living_street: 'Living Street',
+    swimming_pool: 'Swimming Pool', car_park: 'Car Park', fuel: 'Petrol Station', atm: 'ATM',
+    bank: 'Bank', pub: 'Pub', bar: 'Bar', cafe: 'Café', restaurant: 'Restaurant',
+    hotel: 'Hotel', hospital: 'Hospital', pharmacy: 'Pharmacy', school: 'School',
+    university: 'University', library: 'Library', museum: 'Museum', theatre: 'Theatre',
+    cinema: 'Cinema', park: 'Park', garden: 'Garden', forest: 'Forest',
+    supermarket: 'Supermarket', shop: 'Shop', marketplace: 'Market', church: 'Church',
+    mosque: 'Mosque', synagogue: 'Synagogue', airport: 'Airport', stadium: 'Stadium',
+    viewpoint: 'Viewpoint', attraction: 'Attraction', parking: 'Parking',
+  };
+  if (overrides[tag]) return overrides[tag];
+  return tag.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 // ════════════════════════════════════════════════════════════
 // NOMINATIM
 // ════════════════════════════════════════════════════════════
@@ -1155,7 +1463,7 @@ async function nominatim(query, limit=7) {
   try {
     const r = await fetch(
       `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=${limit}&addressdetails=1&extratags=1`,
-      { headers: {'Accept-Language':'en-US,en'} }
+      { headers: { 'Accept-Language': 'en-US,en' } }
     );
     return await r.json();
   } catch { return []; }
@@ -1165,7 +1473,7 @@ async function nominatimReverse(lat, lng) {
   try {
     const r = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&extratags=1`,
-      { headers: {'Accept-Language':'en-US,en'} }
+      { headers: { 'Accept-Language': 'en-US,en' } }
     );
     return await r.json();
   } catch { return null; }
@@ -1178,12 +1486,12 @@ function shortName(item) {
 
 function shortAddr(item) {
   const a = item.address || {};
-  return [a.road, a.suburb||a.neighbourhood, a.city||a.town||a.village, a.country]
-    .filter(Boolean).slice(0,3).join(', ');
+  return [a.road, a.suburb || a.neighbourhood, a.city || a.town || a.village, a.country]
+    .filter(Boolean).slice(0, 3).join(', ');
 }
 
 function typeIcon(type, cat) {
-  const t = (type||cat||'').toLowerCase();
+  const t = (type || cat || '').toLowerCase();
   const map2 = {
     restaurant:'🍽️', cafe:'☕', bar:'🍺', hotel:'🏨', hospital:'🏥',
     school:'🏫', university:'🎓', park:'🌳', museum:'🏛️', shop:'🛍️',
@@ -1192,7 +1500,7 @@ function typeIcon(type, cat) {
     city:'🏙️', town:'🏘️', village:'🏡', suburb:'🏘️',
     street:'🛣️', road:'🛣️', residential:'🏠', country:'🌍'
   };
-  for (const [k,v] of Object.entries(map2)) {
+  for (const [k, v] of Object.entries(map2)) {
     if (t.includes(k)) return v;
   }
   return '📍';
@@ -1209,7 +1517,7 @@ function isNamedPOI(data) {
 function humanType(tags) {
   if (!tags) return '';
   for (const k of ['amenity','tourism','leisure','shop','building','highway','railway']) {
-    if (tags[k]) return tags[k].replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    if (tags[k]) return humanizeTag(tags[k]);
   }
   return '';
 }
@@ -1229,6 +1537,8 @@ function poiIcon(tags) {
 
 const markers = new Map();
 let markerIdCounter = 0;
+// Track dropped pins (from map click) — max 2
+let droppedPinIds = [];
 
 function makeMarkerIcon(color='#2563eb', emoji=null) {
   return L.divIcon({
@@ -1247,9 +1557,9 @@ function addMarker({ latlng, color, emoji, data }) {
   const id = ++markerIdCounter;
   const marker = L.marker(latlng, { icon: makeMarkerIcon(color, emoji) }).addTo(map);
   marker._wayfindId = id;
-  marker.bindPopup(() => buildPopup(id), { maxWidth:300, minWidth:220 });
+  marker.bindPopup(() => buildPopup(id), { maxWidth: 300, minWidth: 220 });
   marker.on('click', () => marker.openPopup());
-  markers.set(id, { marker, data: data||{} });
+  markers.set(id, { marker, data: data || {} });
   return id;
 }
 
@@ -1258,6 +1568,7 @@ function removeMarker(id) {
   if (!e) return;
   map.removeLayer(e.marker);
   markers.delete(id);
+  droppedPinIds = droppedPinIds.filter(x => x !== id);
 }
 
 function buildPopup(markerId) {
@@ -1271,9 +1582,12 @@ function buildPopup(markerId) {
   const div = document.createElement('div');
   div.className = 'map-popup';
   div.innerHTML = `
-    <div class="map-popup-title">${escHtml(name)}</div>
+    <div class="map-popup-header">
+      <div class="map-popup-title">${escHtml(name)}</div>
+      <button class="map-popup-close" data-action="close">✕</button>
+    </div>
     ${addr ? `<div class="map-popup-addr">${escHtml(addr)}</div>` : ''}
-    ${tags.phone||tags.website||tags.opening_hours ? `
+    ${tags.phone || tags.website || tags.opening_hours ? `
       <div class="map-popup-tags">
         ${tags.phone ? `<span class="map-popup-tag">📞 ${escHtml(tags.phone)}</span>` : ''}
         ${tags.website ? `<span class="map-popup-tag">🌐 Website</span>` : ''}
@@ -1289,6 +1603,7 @@ function buildPopup(markerId) {
     btn.addEventListener('click', ev => {
       ev.stopPropagation();
       const action = btn.dataset.action;
+      if (action === 'close') { map.closePopup(); return; }
       const mid = parseInt(btn.dataset.mid);
       const mEntry = markers.get(mid);
       if (!mEntry) return;
@@ -1296,10 +1611,10 @@ function buildPopup(markerId) {
       if (action === 'remove') {
         removeMarker(mid); map.closePopup(); toast('Marker removed');
       } else if (action === 'from') {
-        setRoutePoint('from', [ll.lat, ll.lng], mEntry.data.name||`${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
+        setRoutePoint('from', [ll.lat, ll.lng], mEntry.data.name || `${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
         map.closePopup();
       } else if (action === 'to') {
-        setRoutePoint('to', [ll.lat, ll.lng], mEntry.data.name||`${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
+        setRoutePoint('to', [ll.lat, ll.lng], mEntry.data.name || `${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
         map.closePopup();
       }
     });
@@ -1317,19 +1632,19 @@ function geolocate(cb) {
   if (!navigator.geolocation) { toast('Geolocation not supported'); return; }
   toast('Finding your location…');
   navigator.geolocation.getCurrentPosition(pos => {
-    const {latitude:lat, longitude:lng} = pos.coords;
+    const { latitude: lat, longitude: lng } = pos.coords;
     if (locationMarker) { map.removeLayer(locationMarker); locationMarker = null; }
-    locationMarker = L.marker([lat,lng], {
+    locationMarker = L.marker([lat, lng], {
       icon: L.divIcon({
-        className:'', html:'<div class="loc-dot"></div>',
-        iconSize:[16,16], iconAnchor:[8,8]
-      }), zIndexOffset:1000
+        className: '', html: '<div class="loc-dot"></div>',
+        iconSize: [16,16], iconAnchor: [8,8]
+      }), zIndexOffset: 1000
     }).addTo(map);
     locationMarker.bindPopup('<div class="map-popup"><div class="map-popup-title">You are here</div></div>');
-    map.setView([lat,lng], 15, { animate:true });
+    map.setView([lat, lng], 15, { animate: true });
     toast('Location found ✓');
-    if (cb) cb([lat,lng]);
-  }, () => toast('Location access denied'), { enableHighAccuracy:true });
+    if (cb) cb([lat, lng]);
+  }, () => toast('Location access denied'), { enableHighAccuracy: true });
 }
 
 document.getElementById('locate-btn').addEventListener('click', () => geolocate());
@@ -1341,8 +1656,8 @@ document.getElementById('search-locate').addEventListener('click', () => geoloca
 
 const searchInput = document.getElementById('search-input');
 const searchClear = document.getElementById('search-clear');
-const acResults = document.getElementById('autocomplete-results');
-const searchBox = document.getElementById('search-box');
+const acResults   = document.getElementById('autocomplete-results');
+const searchBox   = document.getElementById('search-box');
 let searchTimer, searchMarkerId = null;
 
 searchInput.addEventListener('input', () => {
@@ -1397,13 +1712,15 @@ function renderSearchAC(results) {
   results.forEach(r => {
     const div = document.createElement('div');
     div.className = 'ac-item';
+    const rawType = r.type || r.category || '';
+    const displayType = humanizeTag(rawType);
     div.innerHTML = `
       <div class="ac-icon">${typeIcon(r.type, r.category)}</div>
       <div class="ac-text">
         <div class="ac-name">${escHtml(shortName(r))}</div>
         <div class="ac-addr">${escHtml(shortAddr(r))}</div>
       </div>
-      <div class="ac-type">${escHtml(r.type||r.category||'')}</div>`;
+      <div class="ac-type">${escHtml(displayType)}</div>`;
     div.addEventListener('click', () => { goToResult(r); hideSearchAC(); });
     acResults.appendChild(div);
   });
@@ -1415,10 +1732,10 @@ function goToResult(r) {
   const name = shortName(r);
   if (searchMarkerId !== null) removeMarker(searchMarkerId);
   searchMarkerId = addMarker({
-    latlng:[lat,lng], color:'#2563eb',
-    data:{ name, address:shortAddr(r), tags:r.extratags||{} }
+    latlng: [lat, lng], color: '#2563eb',
+    data: { name, address: shortAddr(r), tags: r.extratags || {} }
   });
-  map.setView([lat,lng], 16, {animate:true});
+  map.setView([lat, lng], 16, { animate: true });
   searchInput.value = name;
   searchClear.classList.add('show');
   toast(`Found: ${name}`);
@@ -1426,7 +1743,7 @@ function goToResult(r) {
 }
 
 // ════════════════════════════════════════════════════════════
-// DIRECTIONS MODE (A→B with form)
+// DIRECTIONS MODE
 // ════════════════════════════════════════════════════════════
 
 let routeFrom = null, routeTo = null;
@@ -1436,12 +1753,12 @@ let routeSteps = [], currentStepIdx = 0;
 let navigationActive = false;
 
 const fromInput = document.getElementById('from-input');
-const toInput = document.getElementById('to-input');
+const toInput   = document.getElementById('to-input');
 const fromClear = document.getElementById('from-clear');
-const toClear = document.getElementById('to-clear');
-const fromAC = document.getElementById('from-ac');
-const toAC = document.getElementById('to-ac');
-const goBtn = document.getElementById('go-btn');
+const toClear   = document.getElementById('to-clear');
+const fromAC    = document.getElementById('from-ac');
+const toAC      = document.getElementById('to-ac');
+const goBtn     = document.getElementById('go-btn');
 
 function openRoutePanel() {
   closeTrailPanel();
@@ -1456,11 +1773,16 @@ function closeRoutePanel() {
 document.getElementById('route-btn').addEventListener('click', openRoutePanel);
 document.getElementById('route-close').addEventListener('click', closeRoutePanel);
 
+// Transport mode buttons — auto-recalculate if route already exists
 document.querySelectorAll('.transport-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.transport-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     routeProfile = btn.dataset.profile;
+    // Auto-recalculate if route already exists
+    if (routeFrom && routeTo) {
+      calcDirectionsRoute(routeFrom, routeTo);
+    }
   });
 });
 
@@ -1527,46 +1849,49 @@ async function resolveInput(input, stored) {
 
 goBtn.addEventListener('click', async () => {
   const from = await resolveInput(fromInput, routeFrom);
-  const to = await resolveInput(toInput, routeTo);
+  const to   = await resolveInput(toInput, routeTo);
   if (!from || !to) { toast('Please fill in both fields'); return; }
   routeFrom = from; routeTo = to;
   calcDirectionsRoute(from, to);
 });
 
-function calcDirectionsRoute(from, to, waypoints=[]) {
+// Get the correct OSRM router options based on profile
+function getRouterOpts(profile) {
+  if (profile === 'car') {
+    return { serviceUrl: 'https://router.project-osrm.org/route/v1', profile: 'car' };
+  }
+  // foot and bike: use routing.openstreetmap.de which supports all modes
+  return { serviceUrl: `https://routing.openstreetmap.de/routed-${profile}/route/v1`, profile };
+}
+
+function calcDirectionsRoute(from, to) {
   toast('Calculating route…');
   if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+  document.getElementById('route-summary-card').classList.remove('show');
 
-  const allWPs = [
-    L.latLng(from[0],from[1]),
-    ...waypoints.map(w => L.latLng(w[0],w[1])),
-    L.latLng(to[0],to[1])
-  ];
-  const profileMap = { car:'car', bike:'bike', foot:'foot' };
+  const opts = getRouterOpts(routeProfile);
+  const allWPs = [L.latLng(from[0], from[1]), L.latLng(to[0], to[1])];
 
   routingControl = L.Routing.control({
     waypoints: allWPs,
-    router: L.Routing.osrmv1({
-      serviceUrl: 'https://router.project-osrm.org/route/v1',
-      profile: profileMap[routeProfile]||'car'
-    }),
+    router: L.Routing.osrmv1({ serviceUrl: opts.serviceUrl, profile: opts.profile }),
     lineOptions: {
       styles: [
-        { color:'#2563eb', weight:6, opacity:0.9 },
-        { color:'#93c5fd', weight:2, opacity:0.4 }
+        { color: '#2563eb', weight: 6, opacity: 0.9 },
+        { color: '#93c5fd', weight: 2, opacity: 0.4 }
       ],
-      extendToWaypoints:true, missingRouteTolerance:0
+      extendToWaypoints: true, missingRouteTolerance: 0
     },
-    show:false, addWaypoints:false, fitSelectedRoutes:true,
+    show: false, addWaypoints: false, fitSelectedRoutes: true,
     createMarker: (i, wp, n) => {
       const isFirst = i === 0, isLast = i === n-1;
       const color = isFirst ? '#059669' : isLast ? '#dc2626' : '#d97706';
       const label = isFirst ? 'A' : isLast ? 'B' : String.fromCharCode(65+i);
       return L.marker(wp.latLng, {
         icon: L.divIcon({
-          className:'',
-          html:`<div style="width:30px;height:30px;border-radius:50%;background:${color};border:3px solid white;color:white;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.25);font-family:var(--font)">${label}</div>`,
-          iconSize:[30,30], iconAnchor:[15,15]
+          className: '',
+          html: `<div style="width:30px;height:30px;border-radius:50%;background:${color};border:3px solid white;color:white;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.25);font-family:var(--font)">${label}</div>`,
+          iconSize: [30,30], iconAnchor: [15,15]
         })
       });
     }
@@ -1574,25 +1899,29 @@ function calcDirectionsRoute(from, to, waypoints=[]) {
 
   routingControl.on('routesfound', e => {
     const route = e.routes[0];
-    routeSteps = route.instructions||[];
+    routeSteps = route.instructions || [];
     const dist = route.summary.totalDistance, time = route.summary.totalTime;
-    document.getElementById('card-time').textContent = fmtTime(time);
-    document.getElementById('card-dist').textContent = fmtDist(dist);
-    document.getElementById('card-profile').textContent = {car:'🚗',bike:'🚲',foot:'🚶'}[routeProfile]||'🚗';
+    document.getElementById('rsc-time').textContent = fmtTime(time);
+    document.getElementById('rsc-dist').textContent = fmtDist(dist);
+    document.getElementById('rsc-profile').textContent = { car:'🚗', bike:'🚲', foot:'🚶' }[routeProfile] || '🚗';
     document.getElementById('route-summary-card').classList.add('show');
     closeRoutePanel();
-    toast(`Route: ${fmtDist(dist)} · ${fmtTime(time)} ✓`);
+    toast(`${fmtDist(dist)} · ${fmtTime(time)} ✓`);
   });
 
   routingControl.on('routingerror', () => toast('Could not find a route between these points'));
 }
 
+// Route summary card buttons
+document.getElementById('card-steps-btn').addEventListener('click', () => {
+  showInstructionsPanel(routeSteps);
+});
 document.getElementById('card-edit-btn').addEventListener('click', () => {
   document.getElementById('route-summary-card').classList.remove('show');
   openRoutePanel();
 });
 document.getElementById('card-clear-btn').addEventListener('click', clearDirectionsRoute);
-document.getElementById('card-go-btn').addEventListener('click', () => startNavigation());
+document.getElementById('card-go-btn').addEventListener('click', () => startNavigation(null, 'directions'));
 
 function clearDirectionsRoute() {
   if (routingControl) { map.removeControl(routingControl); routingControl = null; }
@@ -1600,23 +1929,56 @@ function clearDirectionsRoute() {
   fromInput.value = ''; toInput.value = '';
   fromClear.classList.remove('show'); toClear.classList.remove('show');
   document.getElementById('route-summary-card').classList.remove('show');
+  document.getElementById('instructions-panel').classList.remove('open');
   stopNavigation();
   updateGoButton();
   toast('Route cleared');
 }
 
 // ════════════════════════════════════════════════════════════
+// INSTRUCTIONS PANEL
+// ════════════════════════════════════════════════════════════
+
+function showInstructionsPanel(steps) {
+  if (!steps || steps.length === 0) { toast('No turn-by-turn data available'); return; }
+  const list = document.getElementById('instr-list');
+  list.innerHTML = '';
+  steps.forEach((step, i) => {
+    const typeKey = Object.keys(DIRECTION_ICONS).find(k => step.type && step.type.includes(k)) || 'default';
+    const icon = DIRECTION_ICONS[typeKey];
+    const div = document.createElement('div');
+    div.className = 'instr-step';
+    div.innerHTML = `
+      <div class="instr-icon">${icon}</div>
+      <div class="instr-text-wrap">
+        <div class="instr-text">${escHtml(step.text || 'Continue')}</div>
+        ${step.distance ? `<div class="instr-dist">${fmtDist(step.distance)}</div>` : ''}
+      </div>`;
+    list.appendChild(div);
+  });
+  document.getElementById('instructions-panel').classList.add('open');
+}
+
+document.getElementById('instr-close').addEventListener('click', () => {
+  document.getElementById('instructions-panel').classList.remove('open');
+});
+
+// ════════════════════════════════════════════════════════════
 // NAVIGATION MODE
 // ════════════════════════════════════════════════════════════
 
-function startNavigation(steps) {
+let navSource = 'directions'; // 'directions' | 'trail'
+
+function startNavigation(steps, source) {
   const stepsToUse = (Array.isArray(steps) && steps.length > 0) ? steps : routeSteps;
   if (!Array.isArray(stepsToUse) || stepsToUse.length === 0) { toast('Calculate a route first'); return; }
   routeSteps = stepsToUse;
+  navSource = source || 'directions';
   navigationActive = true;
   currentStepIdx = 0;
   document.getElementById('route-summary-card').classList.remove('show');
   document.getElementById('trail-summary-card').classList.remove('show');
+  document.getElementById('instructions-panel').classList.remove('open');
   document.getElementById('nav-bar').classList.add('open');
   document.getElementById('search-bar').classList.add('hidden');
   updateNavStep(0);
@@ -1629,45 +1991,53 @@ function stopNavigation() {
   document.getElementById('search-bar').classList.remove('hidden');
 }
 
+// Nav stop button: end nav, return to route info (don't clear)
 document.getElementById('nav-stop-btn').addEventListener('click', () => {
   stopNavigation();
-  // Clear whichever mode was active
-  if (trailState.isActive) { clearTrailRoute(); }
-  else { clearDirectionsRoute(); }
+  // Restore the appropriate summary card
+  if (navSource === 'trail') {
+    // Repopulate trail card from current state
+    recalcTrailTotals();
+    document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
+    document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
+    document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
+    document.getElementById('trail-summary-card').classList.add('show');
+  } else {
+    document.getElementById('route-summary-card').classList.add('show');
+  }
 });
 
 function updateNavStep(idx) {
   if (!routeSteps.length) return;
   const step = routeSteps[Math.min(idx, routeSteps.length-1)];
-  const typeKey = Object.keys(DIRECTION_ICONS).find(k => step.type && step.type.includes(k))||'default';
+  const typeKey = Object.keys(DIRECTION_ICONS).find(k => step.type && step.type.includes(k)) || 'default';
   document.getElementById('nav-direction-icon').textContent = DIRECTION_ICONS[typeKey];
-  document.getElementById('nav-step-text').textContent = step.text||'Continue';
-  const distM = step.distance||0;
-  document.getElementById('nav-step-dist').textContent = `Continue for ${fmtDist(distM)}`;
-  let remDist=0, remTime=0;
-  for (let i=idx; i<routeSteps.length; i++) {
-    remDist += routeSteps[i].distance||0;
-    remTime += routeSteps[i].time||0;
+  document.getElementById('nav-step-text').textContent = step.text || 'Continue';
+  document.getElementById('nav-step-dist').textContent = `Continue for ${fmtDist(step.distance || 0)}`;
+  let remDist = 0, remTime = 0;
+  for (let i = idx; i < routeSteps.length; i++) {
+    remDist += routeSteps[i].distance || 0;
+    remTime += routeSteps[i].time || 0;
   }
   document.getElementById('nav-eta').textContent = fmtTime(remTime);
-  document.getElementById('nav-dist-remain').textContent = fmtDist(remDist)+' remaining';
+  document.getElementById('nav-dist-remain').textContent = fmtDist(remDist) + ' remaining';
 }
 
 document.addEventListener('keydown', e => {
   if (!navigationActive) return;
-  if (e.key==='ArrowRight'||e.key==='ArrowDown') { currentStepIdx = Math.min(currentStepIdx+1, routeSteps.length-1); updateNavStep(currentStepIdx); }
-  if (e.key==='ArrowLeft'||e.key==='ArrowUp') { currentStepIdx = Math.max(currentStepIdx-1,0); updateNavStep(currentStepIdx); }
-  if (e.key==='Escape') { stopNavigation(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { currentStepIdx = Math.min(currentStepIdx+1, routeSteps.length-1); updateNavStep(currentStepIdx); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { currentStepIdx = Math.max(currentStepIdx-1, 0); updateNavStep(currentStepIdx); }
+  if (e.key === 'Escape') document.getElementById('nav-stop-btn').click();
 });
 
 // ════════════════════════════════════════════════════════════
-// TRAIL ROUTING MODE — AllTrails-style click-to-plan
+// TRAIL ROUTING MODE
 // ════════════════════════════════════════════════════════════
 
 const trailState = {
   isActive: false,
-  waypoints: [],   // { latlng:[lat,lng], name:str, marker:L.Marker }
-  segments: [],    // { routingCtrl, dist, time, steps, line }
+  waypoints: [],
+  segments: [],
   totalDist: 0,
   totalTime: 0,
   profile: 'foot'
@@ -1676,15 +2046,11 @@ const trailState = {
 let trailRoutingInProgress = false;
 let wpListOpen = false;
 
-// ── OSRM routing endpoints per profile ──
-// router.project-osrm.org only supports driving.
-// For walking/cycling use routing.openstreetmap.de (supports foot/bike/car)
 function osrmServiceUrl(profile) {
-  // routing.openstreetmap.de supports: foot, bike, car
+  if (profile === 'car') return 'https://router.project-osrm.org/route/v1';
   return 'https://routing.openstreetmap.de/routed-' + profile + '/route/v1';
 }
 
-// ── Open/Close trail panel ──
 function openTrailPanel() {
   closeRoutePanel();
   stopNavigation();
@@ -1693,7 +2059,6 @@ function openTrailPanel() {
   document.getElementById('search-bar').classList.add('hidden');
   document.getElementById('trail-btn').classList.add('trail-active');
   document.body.classList.add('trail-mode');
-  showHint('🟢 Click map to place start point', true);
   updateTrailUI();
 }
 
@@ -1712,53 +2077,51 @@ document.getElementById('trail-btn').addEventListener('click', () => {
 });
 document.getElementById('trail-close').addEventListener('click', closeTrailPanel);
 
-// ── Transport profile ──
+// Trail transport — re-route ALL segments on change
 document.querySelectorAll('.trail-transport-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     document.querySelectorAll('.trail-transport-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     trailState.profile = btn.dataset.tprofile;
+    // Re-route all existing segments
+    if (trailState.segments.length > 0) {
+      toast('Recalculating route…');
+      trailState.segments.forEach(s => { if (s.routingCtrl) map.removeControl(s.routingCtrl); });
+      trailState.segments = [];
+      for (let i = 0; i < trailState.waypoints.length - 1; i++) {
+        const seg = await buildTrailSegment(trailState.waypoints[i].latlng, trailState.waypoints[i+1].latlng);
+        trailState.segments.push(seg);
+      }
+      recalcTrailTotals();
+      updateTrailUI();
+      toast('Route updated ✓');
+    }
   });
 });
 
-// ── Waypoint list toggle ──
 function setWpListOpen(open) {
   wpListOpen = open;
   document.getElementById('trail-waypoints-panel').classList.toggle('open', open);
 }
-document.getElementById('trail-pts-badge').addEventListener('click', () => {
-  setWpListOpen(!wpListOpen);
-});
+document.getElementById('trail-pts-badge').addEventListener('click', () => setWpListOpen(!wpListOpen));
 document.getElementById('trail-wp-close').addEventListener('click', () => setWpListOpen(false));
 
-// ── Build a single routing segment between two latlngs ──
-// Returns Promise<{ routingCtrl, dist, time, steps }>
 function buildTrailSegment(fromLL, toLL) {
   return new Promise((resolve) => {
-    const profile = trailState.profile; // capture at call time
-
-    // Map profile name to OSRM format
-    // routing.openstreetmap.de uses: routed-foot, routed-bike, routed-car
-    const profileMap = { foot:'foot', bike:'bike', car:'car' };
-    const osrmProfile = profileMap[profile] || 'foot';
+    const profile = trailState.profile;
+    const svcUrl = osrmServiceUrl(profile);
 
     const ctrl = L.Routing.control({
       waypoints: [L.latLng(fromLL[0], fromLL[1]), L.latLng(toLL[0], toLL[1])],
-      router: L.Routing.osrmv1({
-        serviceUrl: osrmServiceUrl(osrmProfile),
-        profile: osrmProfile
-      }),
+      router: L.Routing.osrmv1({ serviceUrl: svcUrl, profile }),
       lineOptions: {
         styles: [
           { color: '#16a34a', weight: 5, opacity: 0.85 },
           { color: '#86efac', weight: 2, opacity: 0.35 }
         ],
-        extendToWaypoints: true,
-        missingRouteTolerance: 0
+        extendToWaypoints: true, missingRouteTolerance: 0
       },
-      show: false,
-      addWaypoints: false,
-      fitSelectedRoutes: false,
+      show: false, addWaypoints: false, fitSelectedRoutes: false,
       createMarker: () => null
     }).addTo(map);
 
@@ -1768,46 +2131,26 @@ function buildTrailSegment(fromLL, toLL) {
       if (resolved) return;
       resolved = true;
       const route = e.routes[0];
-      resolve({
-        routingCtrl: ctrl,
-        dist: route.summary.totalDistance,
-        time: route.summary.totalTime,
-        steps: route.instructions || []
-      });
-      recalcTrailTotals();
-      updateTrailStats();
+      // Resolve with data — caller is responsible for pushing to segments then recalculating
+      resolve({ routingCtrl: ctrl, dist: route.summary.totalDistance, time: route.summary.totalTime, steps: route.instructions || [] });
     });
 
     ctrl.on('routingerror', () => {
       if (resolved) return;
       resolved = true;
-      // Fallback: haversine straight-line estimate
-      const d = map.distance(
-        L.latLng(fromLL[0], fromLL[1]),
-        L.latLng(toLL[0], toLL[1])
-      );
+      const d = map.distance(L.latLng(fromLL[0], fromLL[1]), L.latLng(toLL[0], toLL[1]));
       const speedMs = profile === 'car' ? 13.9 : profile === 'bike' ? 4.2 : 1.4;
-      resolve({
-        routingCtrl: ctrl,
-        dist: d,
-        time: d / speedMs,
-        steps: []
-      });
-      recalcTrailTotals();
-      updateTrailStats();
+      resolve({ routingCtrl: ctrl, dist: d, time: d / speedMs, steps: [] });
     });
   });
 }
 
-// ── Re-route a segment by index (used after drag or waypoint removal/insertion) ──
 async function rerouteSegment(segIdx) {
   const fromWP = trailState.waypoints[segIdx];
   const toWP   = trailState.waypoints[segIdx + 1];
   if (!fromWP || !toWP) return;
-
   const oldSeg = trailState.segments[segIdx];
   if (oldSeg && oldSeg.routingCtrl) map.removeControl(oldSeg.routingCtrl);
-
   const newSeg = await buildTrailSegment(fromWP.latlng, toWP.latlng);
   trailState.segments[segIdx] = newSeg;
   recalcTrailTotals();
@@ -1815,33 +2158,21 @@ async function rerouteSegment(segIdx) {
   renderTrailWaypointList();
 }
 
-// ── Make a draggable numbered trail marker ──
 function makeTrailWaypointMarker(latlng, index) {
   const { color, label } = trailMarkerStyle(index, trailState.waypoints.length);
-
   const icon = L.divIcon({
     className: '',
-    html: `<div class="trail-marker-el" style="background:${color};cursor:grab" title="Drag to move">${label}</div>`,
-    iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18]
+    html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
+    iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-18]
   });
+  const marker = L.marker(latlng, { icon, draggable: true, autoPan: true, zIndexOffset: 500 }).addTo(map);
 
-  const marker = L.marker(latlng, {
-    icon,
-    draggable: true,
-    autoPan: true,
-    zIndexOffset: 500
-  }).addTo(map);
-
-  // ── Drag behaviour ──
   marker.on('dragstart', () => {
-    // Prevent map clicks from firing during drag
     document.body.classList.add('trail-dragging');
     map.closePopup();
   });
 
   marker.on('drag', () => {
-    // Live-update the latlng stored in waypoints so adjacent segments
-    // would snap if we recalculate, but we skip mid-drag for performance
     const idx = trailState.waypoints.findIndex(w => w.marker === marker);
     if (idx >= 0) trailState.waypoints[idx].latlng = [marker.getLatLng().lat, marker.getLatLng().lng];
   });
@@ -1850,40 +2181,30 @@ function makeTrailWaypointMarker(latlng, index) {
     document.body.classList.remove('trail-dragging');
     const idx = trailState.waypoints.findIndex(w => w.marker === marker);
     if (idx < 0) return;
-
     const ll = marker.getLatLng();
     trailState.waypoints[idx].latlng = [ll.lat, ll.lng];
     trailState.waypoints[idx].name = `${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`;
-
-    // Async reverse geocode for nicer name
     nominatimReverse(ll.lat, ll.lng).then(r => {
       if (r) {
         const name = r.name || (r.display_name || '').split(',')[0].trim();
-        if (name) {
-          trailState.waypoints[idx].name = name;
-          renderTrailWaypointList();
-        }
+        if (name) { trailState.waypoints[idx].name = name; renderTrailWaypointList(); }
       }
     }).catch(() => {});
-
     toast('Updating route…');
-
-    // Re-route affected segments: the one ending at this waypoint and the one starting from it
     const rerouteJobs = [];
     if (idx > 0) rerouteJobs.push(rerouteSegment(idx - 1));
     if (idx < trailState.waypoints.length - 1) rerouteJobs.push(rerouteSegment(idx));
     await Promise.all(rerouteJobs);
-
     recalcTrailTotals();
     updateTrailUI();
     toast('Route updated ✓');
   });
 
-  // Click to show remove popup (only if not dragging)
+  // No popup on click — use waypoints list to remove
   marker.on('click', () => {
     if (document.body.classList.contains('trail-dragging')) return;
     const idx = trailState.waypoints.findIndex(w => w.marker === marker);
-    if (idx >= 0) showTrailMarkerPopup(marker, idx);
+    if (idx >= 0) map.setView(trailState.waypoints[idx].latlng, map.getZoom(), { animate: true });
   });
 
   return marker;
@@ -1897,7 +2218,6 @@ function trailMarkerStyle(index, total) {
   return { color, label };
 }
 
-// ── Refresh all marker icons (call after any structural change) ──
 function refreshTrailMarkerIcons() {
   const total = trailState.waypoints.length;
   trailState.waypoints.forEach((wp, i) => {
@@ -1905,57 +2225,23 @@ function refreshTrailMarkerIcons() {
     wp.marker.setIcon(L.divIcon({
       className: '',
       html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18]
+      iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-18]
     }));
   });
 }
 
-// ── Marker popup (click) ──
-function showTrailMarkerPopup(marker, index) {
-  const wp = trailState.waypoints[index];
-  if (!wp) return;
-  const isFirst = index === 0;
-  const isLast  = index === trailState.waypoints.length - 1;
-  const label   = isFirst ? 'Start' : isLast ? 'End' : `Point ${index + 1}`;
-
-  const div = document.createElement('div');
-  div.className = 'map-popup';
-  div.innerHTML = `
-    <div class="map-popup-title">${label}</div>
-    <div class="map-popup-addr">${escHtml(wp.name)}</div>
-    <div class="map-popup-actions">
-      <button class="map-popup-btn" style="font-size:11px;color:var(--text-muted)" id="twp-drag-hint">⤢ Drag to move</button>
-      ${index > 0 ? `<button class="map-popup-btn remove" id="twp-remove">✕ Remove</button>` : ''}
-    </div>`;
-
-  marker.bindPopup(div, { maxWidth: 240, minWidth: 180 }).openPopup();
-
-  setTimeout(() => {
-    const rb = document.getElementById('twp-remove');
-    if (rb) rb.addEventListener('click', () => { map.closePopup(); removeTrailWaypoint(index); });
-  }, 40);
-}
-
-// ── Remove waypoint, re-route bridging segment if needed ──
 async function removeTrailWaypoint(index) {
   if (index < 0 || index >= trailState.waypoints.length) return;
-
   map.removeLayer(trailState.waypoints[index].marker);
-
-  // Segments to destroy: [index-1] and [index]
   const destroy = [];
   if (index > 0 && trailState.segments[index - 1]) destroy.push(index - 1);
   if (trailState.segments[index]) destroy.push(index);
-
   destroy.sort((a, b) => b - a).forEach(si => {
     const seg = trailState.segments[si];
     if (seg && seg.routingCtrl) map.removeControl(seg.routingCtrl);
     trailState.segments.splice(si, 1);
   });
-
   trailState.waypoints.splice(index, 1);
-
-  // If removing a middle waypoint, bridge the gap
   if (index > 0 && index < trailState.waypoints.length) {
     const newSeg = await buildTrailSegment(
       trailState.waypoints[index - 1].latlng,
@@ -1963,134 +2249,92 @@ async function removeTrailWaypoint(index) {
     );
     trailState.segments.splice(index - 1, 0, newSeg);
   }
-
   refreshTrailMarkerIcons();
   recalcTrailTotals();
   updateTrailUI();
   toast('Point removed');
 }
 
-// ── Handle map click in trail mode ──
 async function handleTrailClick(latlng) {
   if (trailRoutingInProgress) return;
-
   const lat = latlng.lat, lng = latlng.lng;
   let name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
-  // Async reverse geocode — update name once it arrives
   nominatimReverse(lat, lng).then(r => {
     if (!r) return;
     const n = r.name || (r.display_name || '').split(',')[0].trim();
     if (!n) return;
-    // Find the waypoint we just added and update its name
-    const addedIdx = trailState.waypoints.findIndex(
-      w => w.latlng[0] === lat && w.latlng[1] === lng && w.name === name
-    );
-    if (addedIdx >= 0) {
-      trailState.waypoints[addedIdx].name = n;
-      renderTrailWaypointList();
-    }
+    const addedIdx = trailState.waypoints.findIndex(w => w.latlng[0] === lat && w.latlng[1] === lng && w.name === name);
+    if (addedIdx >= 0) { trailState.waypoints[addedIdx].name = n; renderTrailWaypointList(); }
   }).catch(() => {});
 
   const prevCount = trailState.waypoints.length;
-
-  // Create draggable marker
   const marker = makeTrailWaypointMarker([lat, lng], prevCount);
   trailState.waypoints.push({ latlng: [lat, lng], name, marker });
 
-  // Route segment from previous → this
   if (prevCount >= 1) {
     trailRoutingInProgress = true;
-    refreshTrailMarkerIcons(); // update end marker colour immediately
+    refreshTrailMarkerIcons();
     toast('Routing…');
     const prev = trailState.waypoints[prevCount - 1];
     const seg = await buildTrailSegment(prev.latlng, [lat, lng]);
     trailState.segments.push(seg);
+    recalcTrailTotals();          // recalc AFTER push — stats now reflect this segment
     trailRoutingInProgress = false;
     toast(`+${fmtDist(seg.dist)}`);
   } else {
     refreshTrailMarkerIcons();
-    toast('Start placed — click to add next point');
   }
-
   updateTrailUI();
 }
 
-// ── Totals ──
 function recalcTrailTotals() {
   trailState.totalDist = trailState.segments.reduce((s, seg) => s + (seg.dist || 0), 0);
   trailState.totalTime = trailState.segments.reduce((s, seg) => s + (seg.time || 0), 0);
 }
 
-// ── Update compact stats inline ──
 function updateTrailStats() {
   const n = trailState.waypoints.length;
   document.getElementById('ts-points').textContent = n;
-  document.getElementById('ts-dist').textContent = trailState.totalDist > 0
-    ? (trailState.totalDist >= 1000
-        ? (trailState.totalDist / 1000).toFixed(1)
-        : Math.round(trailState.totalDist) + 'm')
-    : '—';
-  document.getElementById('ts-time').textContent = trailState.totalTime > 0
-    ? fmtTime(trailState.totalTime)
-    : '—';
+  const d = trailState.totalDist;
+  document.getElementById('ts-dist').textContent = d > 0 ? fmtDist(d) : '—';
+  document.getElementById('ts-time').textContent = trailState.totalTime > 0 ? fmtTime(trailState.totalTime) : '—';
 }
 
-// ── Full UI refresh ──
 function updateTrailUI() {
   const n = trailState.waypoints.length;
-
-  // Hint text
-  if      (n === 0) showHint('🟢 Click to place START', true);
-  else if (n === 1) showHint('🔴 Click to place END', true);
-  else              showHint(`📍 Click to extend • drag points to adjust`, true);
-
-  // Buttons
   document.getElementById('trail-undo-btn').disabled  = n === 0;
   document.getElementById('trail-clear-btn').disabled = n === 0;
   document.getElementById('trail-finish-btn').disabled = n < 2;
-
   updateTrailStats();
   renderTrailWaypointList();
 }
 
-// ── Render compact waypoint list ──
 function renderTrailWaypointList() {
   const list = document.getElementById('trail-waypoints-list');
   list.innerHTML = '';
-
   if (trailState.waypoints.length === 0) {
     list.innerHTML = '<div style="padding:10px 8px;font-size:12px;color:var(--text-muted);text-align:center;">No points yet</div>';
     return;
   }
-
   trailState.waypoints.forEach((wp, i) => {
     const { color, label } = trailMarkerStyle(i, trailState.waypoints.length);
-    const tag = i === 0 ? 'Start' : i === trailState.waypoints.length - 1 ? 'End' : `${i + 1}`;
     const seg = trailState.segments[i - 1];
-
     const div = document.createElement('div');
     div.className = 'trail-wp-item';
     div.innerHTML = `
-      <div class="trail-wp-dot" style="background:${color}">${tag === 'Start' ? '▶' : tag === 'End' ? '■' : tag}</div>
+      <div class="trail-wp-dot" style="background:${color}">${label}</div>
       <div class="trail-wp-name">${escHtml(wp.name)}</div>
       ${seg ? `<div class="trail-wp-dist">${fmtDist(seg.dist)}</div>` : ''}
-      ${i > 0 ? `<button class="trail-wp-remove" data-idx="${i}">✕</button>` : ''}
-    `;
-
+      ${i > 0 ? `<button class="trail-wp-remove" data-idx="${i}">✕</button>` : ''}`;
     div.addEventListener('click', () => map.setView(wp.latlng, 16, { animate: true }));
     list.appendChild(div);
   });
-
   list.querySelectorAll('.trail-wp-remove').forEach(btn => {
-    btn.addEventListener('click', ev => {
-      ev.stopPropagation();
-      removeTrailWaypoint(parseInt(btn.dataset.idx));
-    });
+    btn.addEventListener('click', ev => { ev.stopPropagation(); removeTrailWaypoint(parseInt(btn.dataset.idx)); });
   });
 }
 
-// ── Undo ──
+// Undo
 document.getElementById('trail-undo-btn').addEventListener('click', () => {
   if (trailState.waypoints.length === 0) return;
   const last = trailState.waypoints.pop();
@@ -2105,7 +2349,7 @@ document.getElementById('trail-undo-btn').addEventListener('click', () => {
   toast('Undone');
 });
 
-// ── Clear ──
+// Clear
 document.getElementById('trail-clear-btn').addEventListener('click', clearTrailRoute);
 
 function clearTrailRoute() {
@@ -2116,29 +2360,26 @@ function clearTrailRoute() {
   trailState.totalDist = 0;
   trailState.totalTime = 0;
   document.getElementById('trail-summary-card').classList.remove('show');
+  document.getElementById('instructions-panel').classList.remove('open');
   setWpListOpen(false);
   updateTrailUI();
   toast('Route cleared');
 }
 
-// ── Finish ──
+// Finish
 document.getElementById('trail-finish-btn').addEventListener('click', () => {
   if (trailState.waypoints.length < 2) return;
   recalcTrailTotals();
-  document.getElementById('trail-card-dist').textContent = fmtDist(trailState.totalDist);
-  document.getElementById('trail-card-time').textContent = fmtTime(trailState.totalTime);
-  document.getElementById('trail-card-pts').textContent  = String(trailState.waypoints.length);
+  document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
+  document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
+  document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
   document.getElementById('trail-summary-card').classList.add('show');
   closeTrailPanel();
   hideHint();
   toast('Route complete! 🥾');
 });
 
-// ── Summary card actions ──
-document.getElementById('trail-summary-close').addEventListener('click', () => {
-  document.getElementById('trail-summary-card').classList.remove('show');
-  openTrailPanel();
-});
+// Trail summary card actions
 document.getElementById('trail-card-edit-btn').addEventListener('click', () => {
   document.getElementById('trail-summary-card').classList.remove('show');
   openTrailPanel();
@@ -2152,21 +2393,184 @@ document.getElementById('trail-card-nav-btn').addEventListener('click', () => {
   const allSteps = trailState.segments.flatMap(seg => seg.steps || []);
   if (allSteps.length === 0) { toast('No turn-by-turn data for this route'); return; }
   document.getElementById('trail-summary-card').classList.remove('show');
-  startNavigation(allSteps);
+  startNavigation(allSteps, 'trail');
 });
+document.getElementById('trail-card-steps-btn').addEventListener('click', () => {
+  const allSteps = trailState.segments.flatMap(seg => seg.steps || []);
+  showInstructionsPanel(allSteps);
+});
+document.getElementById('trail-card-gpx-btn').addEventListener('click', () => {
+  saveGPX('trail');
+});
+
+// ════════════════════════════════════════════════════════════
+// GPX LOAD / SAVE
+// ════════════════════════════════════════════════════════════
+
+let gpxLayer = null;          // raw preview polyline
+let gpxRawPoints = [];        // stored [lat, lng] array from file
+let gpxFileName = '';
+
+document.getElementById('gpx-load-btn').addEventListener('click', () => {
+  document.getElementById('gpx-file-input').click();
+});
+
+document.getElementById('gpx-file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    loadGPXString(ev.target.result, file.name);
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+function loadGPXString(text, name) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'application/xml');
+  const trkpts = Array.from(doc.querySelectorAll('trkpt,rtept,wpt'));
+  if (trkpts.length === 0) { toast('No track points found in GPX'); return; }
+
+  const latlngs = trkpts.map(pt => [
+    parseFloat(pt.getAttribute('lat')),
+    parseFloat(pt.getAttribute('lon'))
+  ]).filter(([a, b]) => !isNaN(a) && !isNaN(b));
+
+  if (latlngs.length === 0) { toast('Invalid coordinates in GPX'); return; }
+
+  removeGPXPreview();
+  gpxRawPoints = latlngs;
+  gpxFileName = name;
+
+  // Draw dashed preview polyline
+  gpxLayer = L.polyline(latlngs, {
+    color: '#7c3aed', weight: 4, opacity: 0.75, dashArray: '8,5'
+  }).addTo(map);
+
+  map.fitBounds(gpxLayer.getBounds(), { padding: [32, 32], animate: true });
+
+  // Show info bar
+  document.getElementById('gpx-info-name').textContent = name.replace(/\.gpx$/i, '');
+  document.getElementById('gpx-info-meta').textContent = latlngs.length + ' track points — click Edit to make editable';
+  const bar = document.getElementById('gpx-info-bar');
+  bar.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.add('show')));
+
+  toast('GPX loaded: ' + latlngs.length + ' pts');
+}
+
+function removeGPXPreview() {
+  if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+  gpxRawPoints = [];
+  gpxFileName = '';
+  const bar = document.getElementById('gpx-info-bar');
+  bar.classList.remove('show');
+  setTimeout(() => { if (!bar.classList.contains('show')) bar.style.display = 'none'; }, 350);
+}
+
+// Remove button
+document.getElementById('gpx-remove-btn').addEventListener('click', () => {
+  removeGPXPreview();
+  toast('GPX removed');
+});
+
+// Edit button — downsample to ≤30 waypoints and load into trail planner
+document.getElementById('gpx-edit-btn').addEventListener('click', () => {
+  if (gpxRawPoints.length === 0) return;
+
+  const MAX_WP = 30;
+  let sampled;
+  if (gpxRawPoints.length <= MAX_WP) {
+    sampled = gpxRawPoints.slice();
+  } else {
+    sampled = [];
+    const step = (gpxRawPoints.length - 1) / (MAX_WP - 1);
+    for (let i = 0; i < MAX_WP; i++) {
+      sampled.push(gpxRawPoints[Math.round(i * step)]);
+    }
+  }
+
+  // Remove preview and clear any existing trail
+  removeGPXPreview();
+  clearTrailRoute();
+  openTrailPanel();
+
+  // Feed each sampled point through the trail click handler sequentially
+  (async () => {
+    toast('Building ' + sampled.length + '-point editable route...', 5000);
+    for (let i = 0; i < sampled.length; i++) {
+      await handleTrailClick({ lat: sampled[i][0], lng: sampled[i][1] });
+      if (i < sampled.length - 1) await new Promise(r => setTimeout(r, 100));
+    }
+    toast('GPX route editable — drag waypoints to adjust');
+  })();
+});
+
+function saveGPX(mode) {
+  let coordPairs = [];
+
+  if (mode === 'trail' && trailState.segments.length > 0) {
+    trailState.segments.forEach(seg => {
+      if (seg.routingCtrl && seg.routingCtrl._routes && seg.routingCtrl._routes[0]) {
+        const coords = seg.routingCtrl._routes[0].coordinates || [];
+        coords.forEach(ll => coordPairs.push([ll.lat, ll.lng]));
+      }
+    });
+    if (coordPairs.length === 0) {
+      trailState.waypoints.forEach(wp => coordPairs.push(wp.latlng));
+    }
+  } else if (mode === 'route' && routingControl) {
+    if (routingControl._routes && routingControl._routes[0]) {
+      const coords = routingControl._routes[0].coordinates || [];
+      coords.forEach(ll => coordPairs.push([ll.lat, ll.lng]));
+    }
+  }
+
+  if (coordPairs.length === 0) { toast('No route data to export'); return; }
+
+  const now = new Date().toISOString();
+  const trkpts = coordPairs.map(([lat, lng]) =>
+    `      <trkpt lat="${lat.toFixed(6)}" lon="${lng.toFixed(6)}"><time>${now}</time></trkpt>`
+  ).join('\n');
+
+  const gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Wayfind" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><time>${now}</time></metadata>
+  <trk>
+    <name>Wayfind Route</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+
+  const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wayfind-route-${Date.now()}.gpx`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('GPX saved ✓');
+}
 
 // ════════════════════════════════════════════════════════════
 // MAP CLICK — unified handler
 // ════════════════════════════════════════════════════════════
 
 map.on('click', async e => {
-  // If trail mode is active, ALL map clicks go to trail handler
   if (trailState.isActive) {
     handleTrailClick(e.latlng);
     return;
   }
 
-  // Normal mode: reverse geocode & drop pin or show POI
+  // Don't drop pins while route panel is open or summary cards are visible
+  const routePanelOpen = document.getElementById('route-panel').classList.contains('open');
+  const routeSummaryVisible = document.getElementById('route-summary-card').classList.contains('show');
+  const trailSummaryVisible = document.getElementById('trail-summary-card').classList.contains('show');
+  if (routePanelOpen || routeSummaryVisible || trailSummaryVisible) return;
+
   const { lat, lng } = e.latlng;
   const data = await nominatimReverse(lat, lng);
 
@@ -2181,8 +2585,15 @@ map.on('click', async e => {
       addr = shortAddr(data) || data.display_name.split(',').slice(0,4).join(', ');
       tags = data.extratags || {};
     }
+
+    // Limit to 2 dropped pins — remove oldest if needed
+    if (droppedPinIds.length >= 2) {
+      removeMarker(droppedPinIds.shift());
+    }
+
     toast(`📍 ${name}`);
     const id = addMarker({ latlng:[lat,lng], color:'#7c3aed', data:{ name, address:addr, tags } });
+    droppedPinIds.push(id);
     markers.get(id)?.marker.openPopup();
   }
 });
@@ -2195,11 +2606,11 @@ let currentPoiLatLng = null;
 
 function showPoiCard(data, lat, lng) {
   currentPoiLatLng = [lat, lng];
-  const tags = data.extratags||{};
-  const addr = data.address||{};
+  const tags = data.extratags || {};
+  const addr = data.address || {};
   const name = data.name || data.display_name?.split(',')[0] || 'Place';
-  const type = humanType({ amenity:data.type, ...tags }) || data.category || '';
-  const icon = poiIcon({ amenity:data.type, tourism:tags.tourism, leisure:tags.leisure, shop:tags.shop });
+  const type = humanType({ amenity: data.type, ...tags }) || humanizeTag(data.category) || '';
+  const icon = poiIcon({ amenity: data.type, tourism: tags.tourism, leisure: tags.leisure, shop: tags.shop });
 
   document.getElementById('poi-card-icon').textContent = icon;
   document.getElementById('poi-card-name').textContent = name;
@@ -2208,7 +2619,7 @@ function showPoiCard(data, lat, lng) {
   const body = document.getElementById('poi-card-body');
   body.innerHTML = '';
   const addrStr = [addr.road, addr.house_number].filter(Boolean).join(' ') +
-    (addr.city||addr.town ? ', '+(addr.city||addr.town) : '');
+    (addr.city || addr.town ? ', ' + (addr.city || addr.town) : '');
 
   const rows = [
     addrStr && { icon:'📌', text:addrStr },
@@ -2233,14 +2644,12 @@ function showPoiCard(data, lat, lng) {
 document.getElementById('poi-card-close').addEventListener('click', () => {
   document.getElementById('poi-card').classList.remove('show');
 });
-
 document.getElementById('poi-set-from').addEventListener('click', () => {
   if (!currentPoiLatLng) return;
   const name = document.getElementById('poi-card-name').textContent;
   setRoutePoint('from', currentPoiLatLng, name);
   document.getElementById('poi-card').classList.remove('show');
 });
-
 document.getElementById('poi-set-to').addEventListener('click', () => {
   if (!currentPoiLatLng) return;
   const name = document.getElementById('poi-card-name').textContent;
@@ -2249,32 +2658,43 @@ document.getElementById('poi-set-to').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════════════════
-// PNG EXPORT
+// PNG EXPORT with zoom level selection
 // ════════════════════════════════════════════════════════════
 
 document.getElementById('export-btn').addEventListener('click', async () => {
+  await doExport(map.getZoom());
+});
+
+async function doExport() {
   toast('Exporting map…');
-  const mapEl = document.getElementById('map');
-  const rect = mapEl.getBoundingClientRect();
   try {
+    const mapEl = document.getElementById('map');
+    const rect = mapEl.getBoundingClientRect();
+
     const canvas = await html2canvas(mapEl, {
-      useCORS:true, allowTaint:true,
-      width:rect.width, height:rect.height,
-      scale:2, logging:false, backgroundColor:'#f5f6fa'
+      useCORS: true, allowTaint: true,
+      width: rect.width, height: rect.height,
+      scale: 2, logging: false, backgroundColor: '#f5f6fa'
     });
+
     const final = document.createElement('canvas');
-    final.width = canvas.width; final.height = canvas.height;
+    final.width  = canvas.width;
+    final.height = canvas.height;
     const ctx = final.getContext('2d');
     ctx.drawImage(canvas, 0, 0);
 
+    // Attribution bar
     const wh = final.height, ww = final.width;
-    ctx.fillStyle = 'rgba(255,255,255,0.82)';
-    ctx.fillRect(0, wh-36, ww, 36);
-    ctx.font = 'bold 15px Figtree, sans-serif'; ctx.fillStyle = '#2563eb';
-    ctx.fillText('Wayfind', 14, wh-12);
-    ctx.font = '11px Figtree, sans-serif'; ctx.fillStyle = '#6b7280';
+    const barH = 52;
+    ctx.fillStyle = 'rgba(255,255,255,0.90)';
+    ctx.fillRect(0, wh - barH, ww, barH);
+    ctx.font = 'bold 22px Figtree, sans-serif';
+    ctx.fillStyle = '#2563eb';
+    ctx.fillText('Wayfind', 18, wh - barH/2 + 8);
+    ctx.font = '14px Figtree, sans-serif';
+    ctx.fillStyle = '#374151';
     const c = map.getCenter();
-    ctx.fillText(`© OpenStreetMap contributors · ${c.lat.toFixed(4)},${c.lng.toFixed(4)} · Z${map.getZoom()} · ${new Date().toLocaleDateString()}`, 100, wh-12);
+    ctx.fillText(`© OpenStreetMap contributors  ·  ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}  ·  Z${map.getZoom()}  ·  ${new Date().toLocaleDateString()}`, 130, wh - barH/2 + 8);
 
     const link = document.createElement('a');
     link.download = `wayfind-${Date.now()}.png`;
@@ -2285,7 +2705,7 @@ document.getElementById('export-btn').addEventListener('click', async () => {
     toast('Export failed — try OSM Standard style');
     console.error(err);
   }
-});
+}
 
 // ════════════════════════════════════════════════════════════
 // LOADER
@@ -2297,7 +2717,7 @@ window.addEventListener('load', () => {
     l.classList.add('fade');
     setTimeout(() => l.remove(), 400);
     map.invalidateSize();
-  }, 1200);
+  }, 1000);
 });
 
 setTimeout(() => map.invalidateSize(), 300);
@@ -2305,11 +2725,10 @@ setTimeout(() => map.invalidateSize(), 300);
 // Initial hint
 setTimeout(() => {
   const h = document.getElementById('mode-hint');
-  h.textContent = '💡 Click anywhere to drop a pin • Use Directions or Plan Route for navigation';
+  h.textContent = '💡 Click anywhere to drop a pin · Use Directions or Plan Route for navigation';
   h.classList.add('show');
   setTimeout(() => h.classList.remove('show'), 4500);
 }, 1800);
-
 </script>
 </body>
 </html>
