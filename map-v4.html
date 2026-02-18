@@ -1,0 +1,2315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wayfind — Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --bg: #f5f6fa;
+  --surface2: #f0f1f6;
+  --border: #e4e6ef;
+  --border-light: #f0f1f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --blue: #2563eb;
+  --blue-light: #eff6ff;
+  --blue-mid: #bfdbfe;
+  --green: #059669;
+  --green-light: #ecfdf5;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --orange: #d97706;
+  --orange-light: #fffbeb;
+  --purple: #7c3aed;
+  --purple-light: #f5f3ff;
+  --trail: #16a34a;
+  --trail-light: #dcfce7;
+  --trail-mid: #86efac;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --font: 'Figtree', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --tr: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--bg); color: var(--text-primary); }
+
+/* ─── MAP ─── */
+#map { position: fixed; inset: 0; z-index: 0; }
+
+/* Trail planning cursor */
+body.trail-mode #map { cursor: crosshair; }
+
+/* ─── LEAFLET OVERRIDES ─── */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--shadow-md) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden;
+  margin-bottom: 8px !important;
+}
+.leaflet-control-zoom a {
+  width: 36px !important; height: 36px !important; line-height: 36px !important;
+  font-size: 18px !important; color: var(--text-primary) !important;
+  background: var(--white) !important; border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-family: var(--font) !important; font-weight: 300 !important;
+}
+.leaflet-control-zoom a:last-child { border-bottom: none !important; }
+.leaflet-control-zoom a:hover { background: var(--bg) !important; color: var(--blue) !important; }
+.leaflet-control-attribution {
+  font-family: var(--font) !important; font-size: 10px !important;
+  background: rgba(255,255,255,0.85) !important; backdrop-filter: blur(8px) !important;
+  border-radius: 6px 0 0 0 !important; padding: 3px 8px !important;
+  color: var(--text-muted) !important; border: none !important;
+}
+.leaflet-control-attribution a { color: var(--blue) !important; }
+.leaflet-routing-container { display: none !important; }
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border) !important;
+  padding: 0 !important; overflow: hidden;
+}
+.leaflet-popup-content { margin: 0 !important; width: auto !important; min-width: 200px; }
+.leaflet-popup-tip-container { display: none; }
+.leaflet-popup-close-button { display: none !important; }
+
+/* ─── TOP SEARCH BAR ─── */
+#search-bar {
+  position: fixed;
+  top: 16px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(560px, calc(100vw - 32px));
+  display: flex; flex-direction: column;
+  transition: opacity var(--tr), pointer-events var(--tr);
+}
+#search-bar.hidden { opacity: 0; pointer-events: none; }
+
+#search-box {
+  display: flex; align-items: center;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid transparent;
+  padding: 0 16px 0 14px; gap: 10px;
+  transition: border-color var(--tr), box-shadow var(--tr), border-radius var(--tr);
+}
+#search-box.focused { border-color: var(--blue); border-radius: var(--radius-xl) var(--radius-xl) 0 0; box-shadow: var(--shadow-md); }
+
+.search-icon { color: var(--text-muted); flex-shrink: 0; display: flex; align-items: center; }
+
+#search-input {
+  flex: 1; border: none; outline: none;
+  font-family: var(--font); font-size: 15px; font-weight: 400;
+  color: var(--text-primary); background: transparent;
+  padding: 13px 0; min-width: 0;
+}
+#search-input::placeholder { color: var(--text-muted); }
+
+#search-clear {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 14px; flex-shrink: 0;
+  transition: background var(--tr);
+}
+#search-clear:hover { background: var(--border); }
+#search-clear.show { display: flex; }
+
+#search-locate {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--blue-light); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--blue); flex-shrink: 0; transition: background var(--tr);
+}
+#search-locate:hover { background: var(--blue-mid); }
+
+#autocomplete-results {
+  background: var(--white);
+  border: 1.5px solid var(--blue); border-top: none;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  overflow: hidden; display: none; box-shadow: var(--shadow-md);
+  max-height: 300px; overflow-y: auto;
+}
+#autocomplete-results.show { display: block; }
+
+.ac-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; cursor: pointer;
+  transition: background var(--tr);
+  border-bottom: 1px solid var(--border-light);
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover { background: var(--blue-light); }
+.ac-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  background: var(--surface2); display: flex; align-items: center;
+  justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.ac-text { flex: 1; min-width: 0; }
+.ac-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-addr { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.ac-type { font-size: 11px; color: var(--blue); font-weight: 500; flex-shrink: 0; }
+
+/* ─── LEFT CONTROLS ─── */
+#left-controls {
+  position: fixed; left: 16px; bottom: 100px;
+  z-index: 900; display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ─── RIGHT CONTROLS ─── */
+#right-controls {
+  position: fixed; right: 16px; bottom: 100px;
+  z-index: 900; display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+}
+
+.ctrl-btn {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 10px 14px; cursor: pointer;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--text-primary); display: flex; align-items: center; gap: 7px;
+  box-shadow: var(--shadow-sm); transition: all var(--tr); white-space: nowrap;
+}
+.ctrl-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.ctrl-btn:hover { box-shadow: var(--shadow-md); border-color: var(--blue); color: var(--blue); }
+.ctrl-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+.ctrl-btn.trail-active { background: var(--trail); border-color: var(--trail); color: white; }
+.ctrl-btn.trail-active:hover { background: #15803d; }
+
+.ctrl-btn-icon {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 50%; width: 44px; height: 44px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); box-shadow: var(--shadow-sm);
+  transition: all var(--tr); flex-shrink: 0;
+}
+.ctrl-btn-icon svg { width: 18px; height: 18px; }
+.ctrl-btn-icon:hover { box-shadow: var(--shadow-md); color: var(--blue); border-color: var(--blue); }
+
+/* ─── STYLE SWITCHER — ALWAYS AT BOTTOM ─── */
+#style-switcher {
+  position: fixed;
+  bottom: 24px; /* FIXED — never moves */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  background: var(--white);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--border);
+  padding: 4px; gap: 2px;
+}
+.style-pill-btn {
+  padding: 7px 14px; border-radius: var(--radius-full); border: none;
+  background: transparent; font-family: var(--font); font-size: 12px;
+  font-weight: 600; color: var(--text-secondary); cursor: pointer;
+  transition: all var(--tr); display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.style-pill-btn:hover { color: var(--text-primary); background: var(--surface2); }
+.style-pill-btn.active { background: var(--blue); color: white; }
+
+/* ─── ROUTE PANEL ─── */
+#route-panel {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 1100; background: var(--white); box-shadow: var(--shadow-lg);
+  transform: translateY(-100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 10px;
+}
+#route-panel.open { transform: translateY(0); }
+
+#route-panel-header { display: flex; align-items: center; gap: 10px; }
+#route-panel-title { font-size: 15px; font-weight: 600; color: var(--text-primary); flex: 1; }
+#route-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 16px; transition: background var(--tr);
+}
+#route-close:hover { background: var(--border); color: var(--red); }
+
+#route-inputs-container { display: flex; flex-direction: column; gap: 6px; }
+
+.route-field {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg); border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); padding: 8px 12px;
+  transition: border-color var(--tr);
+}
+.route-field:focus-within { border-color: var(--blue); background: var(--white); }
+.route-field-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-from { background: var(--green); }
+.dot-to { background: var(--red); }
+.route-field input {
+  flex: 1; border: none; background: transparent;
+  font-family: var(--font); font-size: 13px; font-weight: 400;
+  color: var(--text-primary); outline: none; min-width: 0;
+}
+.route-field input::placeholder { color: var(--text-muted); }
+.route-field-clear {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--border);
+  border: none; cursor: pointer; display: none; align-items: center;
+  justify-content: center; color: var(--text-secondary); font-size: 12px;
+  transition: background var(--tr); flex-shrink: 0;
+}
+.route-field-clear.show { display: flex; }
+.route-field-clear:hover { background: var(--red-light); color: var(--red); }
+
+.route-field-wrapper { position: relative; flex: 1; display: flex; }
+.route-field-wrapper .route-field { flex: 1; }
+
+.route-field-ac {
+  position: absolute; top: 100%; left: 0; right: 0;
+  z-index: 5000; background: var(--white);
+  border: 1.5px solid var(--blue); border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  display: none; max-height: 200px; overflow-y: auto;
+  box-shadow: var(--shadow-md);
+}
+.route-field-ac.show { display: block; }
+.route-ac-item {
+  padding: 9px 14px; font-size: 13px; cursor: pointer;
+  border-bottom: 1px solid var(--border-light); color: var(--text-primary);
+  transition: background var(--tr);
+}
+.route-ac-item:last-child { border-bottom: none; }
+.route-ac-item:hover { background: var(--blue-light); color: var(--blue); }
+.route-ac-item small { color: var(--text-muted); font-size: 11px; display: block; }
+
+#route-options { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.transport-btn {
+  padding: 6px 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; gap: 5px; transition: all var(--tr);
+}
+.transport-btn:hover { border-color: var(--blue); color: var(--blue); }
+.transport-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+#go-btn {
+  margin-left: auto; padding: 9px 22px; border-radius: var(--radius-full);
+  border: none; background: var(--green); color: white;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 2px 10px rgba(5,150,105,0.35); transition: all var(--tr);
+}
+#go-btn:hover { background: #047857; box-shadow: 0 4px 16px rgba(5,150,105,0.45); }
+#go-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── NAV BAR ─── */
+#nav-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1200;
+  background: var(--blue); color: white;
+  padding: 14px 20px; display: flex; align-items: center; gap: 16px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#nav-bar.open { transform: translateY(0); }
+#nav-direction-icon {
+  width: 48px; height: 48px; background: rgba(255,255,255,0.15);
+  border-radius: var(--radius-md); display: flex; align-items: center;
+  justify-content: center; font-size: 22px; flex-shrink: 0;
+}
+#nav-step-text { flex: 1; font-size: 16px; font-weight: 600; line-height: 1.4; }
+#nav-step-dist { font-size: 12px; font-weight: 400; opacity: 0.75; margin-top: 2px; }
+#nav-stats { text-align: right; flex-shrink: 0; }
+#nav-eta { font-size: 20px; font-weight: 700; }
+#nav-dist-remain { font-size: 12px; opacity: 0.75; }
+#nav-stop-btn {
+  background: rgba(255,255,255,0.15); border: none; border-radius: var(--radius-sm);
+  color: white; padding: 8px 14px; font-family: var(--font); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: background var(--tr); flex-shrink: 0;
+}
+#nav-stop-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* ─── ROUTE SUMMARY CARD ─── */
+#route-summary-card {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0; pointer-events: none; z-index: 900;
+  background: var(--white); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl); border: 1px solid var(--border);
+  padding: 16px 20px;
+  min-width: 300px; max-width: min(420px, calc(100vw - 32px));
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#route-summary-card.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+#route-summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.route-stat-big { flex: 1; }
+.route-stat-big .val {
+  font-size: 26px; font-weight: 700; color: var(--text-primary);
+  line-height: 1; font-family: var(--font-serif); font-style: italic;
+}
+.route-stat-big .lbl {
+  font-size: 11px; color: var(--text-muted); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px;
+}
+.route-summary-divider { width: 1px; height: 40px; background: var(--border); }
+#route-summary-actions { display: flex; gap: 8px; }
+.route-action-btn {
+  flex: 1; padding: 10px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); text-align: center; color: var(--text-primary);
+}
+.route-action-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.route-action-btn.primary { background: var(--green); border-color: var(--green); color: white; }
+.route-action-btn.primary:hover { background: #047857; border-color: #047857; }
+
+/* ─── POPUP STYLES ─── */
+.map-popup { padding: 14px 16px; min-width: 220px; max-width: 280px; }
+.map-popup-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; line-height: 1.3; }
+.map-popup-addr { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px; }
+.map-popup-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.map-popup-tag {
+  padding: 3px 9px; border-radius: var(--radius-full); background: var(--surface2);
+  font-size: 11px; font-weight: 500; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 3px;
+}
+.map-popup-actions { display: flex; gap: 6px; border-top: 1px solid var(--border-light); padding-top: 10px; }
+.map-popup-btn {
+  flex: 1; padding: 7px 8px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; text-align: center; transition: all var(--tr); color: var(--text-primary);
+}
+.map-popup-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.map-popup-btn.remove { color: var(--red); }
+.map-popup-btn.remove:hover { border-color: var(--red); background: var(--red-light); }
+.map-popup-btn.from { color: var(--green); }
+.map-popup-btn.from:hover { border-color: var(--green); background: var(--green-light); }
+.map-popup-btn.to { color: var(--red); }
+.map-popup-btn.to:hover { border-color: var(--red); background: var(--red-light); }
+
+/* ─── POI CARD ─── */
+#poi-card {
+  position: fixed; bottom: 80px; right: 16px; z-index: 900;
+  background: var(--white); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl); border: 1px solid var(--border);
+  width: 280px; overflow: hidden;
+  transform: translateX(320px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#poi-card.show { transform: translateX(0); }
+#poi-card-header { padding: 14px 16px 10px; display: flex; align-items: flex-start; gap: 10px; }
+#poi-card-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  font-size: 20px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; background: var(--surface2);
+}
+#poi-card-info { flex: 1; min-width: 0; }
+#poi-card-name { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.3; word-break: break-word; }
+#poi-card-type { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+#poi-card-close {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--surface2);
+  border: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; color: var(--text-secondary); font-size: 14px; flex-shrink: 0;
+}
+#poi-card-body { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 7px; }
+.poi-detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+.poi-detail-icon { color: var(--text-muted); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.poi-detail-text { color: var(--text-primary); line-height: 1.4; }
+.poi-detail-text a { color: var(--blue); text-decoration: none; }
+.poi-detail-text a:hover { text-decoration: underline; }
+#poi-card-actions { padding: 10px 16px 14px; display: flex; gap: 7px; border-top: 1px solid var(--border-light); }
+
+/* ─── TRAIL FLOATING BAR ─── */
+/* Compact pill anchored bottom-left, stays out of the way */
+#trail-panel {
+  position: fixed;
+  bottom: 80px;
+  left: 16px;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none; /* children re-enable */
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+#trail-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* Main compact bar */
+#trail-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--white);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  height: 44px;
+}
+
+/* Transport section (left) */
+#trail-transport-row {
+  display: flex;
+  gap: 1px;
+  padding: 4px 6px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.trail-transport-btn {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-full);
+  border: none; background: transparent;
+  font-size: 15px; cursor: pointer;
+  transition: all var(--tr);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
+.trail-transport-btn:hover { background: var(--surface2); }
+.trail-transport-btn.active {
+  background: var(--trail);
+  box-shadow: 0 1px 6px rgba(22,163,74,0.4);
+}
+
+/* Stats section (middle) */
+#trail-stats-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  flex: 1;
+  min-width: 0;
+}
+.trail-stat-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+}
+.trail-stat-inline .tv {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.trail-stat-inline .tl {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Points badge — clickable to toggle waypoint list */
+#trail-pts-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: var(--trail-light);
+  border: 1px solid var(--trail-mid);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--trail);
+  cursor: pointer;
+  transition: all var(--tr);
+  flex-shrink: 0;
+  user-select: none;
+}
+#trail-pts-badge:hover { background: var(--trail-mid); }
+#trail-pts-badge.has-pts { animation: none; }
+.trail-pulse {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--trail);
+  animation: tpulse 1.4s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes tpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* Action buttons (right) */
+#trail-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 6px;
+  border-left: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.trail-action-btn {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-full);
+  border: none; background: transparent;
+  cursor: pointer; transition: all var(--tr);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.trail-action-btn:hover { background: var(--surface2); color: var(--text-primary); }
+.trail-action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+.trail-action-btn.danger:hover { background: var(--red-light); color: var(--red); }
+.trail-action-btn.success {
+  background: var(--trail); color: white;
+  width: auto; padding: 0 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 700;
+  gap: 4px;
+}
+.trail-action-btn.success:hover { background: #15803d; }
+.trail-action-btn.success:disabled { background: var(--border); color: var(--text-muted); }
+
+/* Waypoint list panel — slides up above the bar */
+#trail-waypoints-panel {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+#trail-waypoints-panel.open {
+  max-height: 240px;
+  opacity: 1;
+  pointer-events: all;
+}
+#trail-wp-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border-light);
+}
+#trail-wp-header span { flex: 1; }
+#trail-wp-close {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 12px;
+}
+#trail-waypoints-list {
+  overflow-y: auto;
+  max-height: 190px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.trail-wp-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500; color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--tr);
+}
+.trail-wp-item:hover { background: var(--bg); }
+.trail-wp-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 800; color: white; flex-shrink: 0;
+}
+.trail-wp-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+.trail-wp-dist { font-size: 10px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+.trail-wp-remove {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 11px; flex-shrink: 0;
+  transition: all var(--tr); opacity: 0;
+}
+.trail-wp-item:hover .trail-wp-remove { opacity: 1; }
+.trail-wp-remove:hover { background: var(--red-light); color: var(--red); }
+
+/* ─── TRAIL SUMMARY CARD ─── */
+#trail-summary-card {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0; pointer-events: none; z-index: 900;
+  background: var(--white); border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl); border: 1px solid var(--trail);
+  padding: 16px 20px;
+  min-width: 320px; max-width: min(440px, calc(100vw - 32px));
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#trail-summary-card.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+#trail-summary-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+#trail-summary-card-title { font-size: 15px; font-weight: 700; color: var(--trail); flex: 1; }
+
+/* ─── CUSTOM MARKERS ─── */
+.custom-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.marker-pin {
+  width: 34px; height: 34px; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2); transition: transform var(--tr);
+}
+.marker-inner { width: 16px; height: 16px; background: white; border-radius: 50%; transform: rotate(45deg); }
+.marker-emoji { font-size: 16px; transform: rotate(45deg); line-height: 1; }
+.marker-shadow { width: 10px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 50%; margin-top: 2px; }
+
+/* Trail numbered markers */
+.trail-marker-el {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  border: 2.5px solid white; cursor: pointer;
+  transition: transform var(--tr);
+  font-family: var(--font);
+}
+.trail-marker-el:hover { transform: scale(1.15); }
+
+.loc-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.2);
+  animation: loc-pulse 2.5s ease-out infinite;
+}
+@keyframes loc-pulse {
+  0%,100% { box-shadow: 0 0 0 4px rgba(37,99,235,0.2); }
+  50% { box-shadow: 0 0 0 10px rgba(37,99,235,0.05); }
+}
+
+/* ─── MODE HINT ─── */
+#mode-hint {
+  position: fixed; top: 96px; left: 50%; transform: translateX(-50%);
+  z-index: 999;
+  background: rgba(17,24,39,0.5);
+  color: white;
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 7px 16px; border-radius: var(--radius-full);
+  font-size: 12px; font-weight: 500; pointer-events: none;
+  display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;
+  max-width: calc(100vw - 32px);
+}
+#mode-hint.show { display: block; }
+#mode-hint.trail {
+  background: rgba(22,163,74,0.55);
+  border-color: rgba(134,239,172,0.25);
+}
+
+/* ─── TOAST ─── */
+#toast {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  opacity: 0; z-index: 2000;
+  background: rgba(17,24,39,0.55);
+  color: white;
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 16px; border-radius: var(--radius-full);
+  font-size: 13px; font-weight: 500; pointer-events: none;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap; max-width: calc(100vw - 32px); text-overflow: ellipsis; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── LOADER ─── */
+#loader {
+  position: fixed; inset: 0; z-index: 9999; background: var(--white);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; transition: opacity 0.4s ease;
+}
+#loader.fade { opacity: 0; pointer-events: none; }
+.loader-brand { font-family: var(--font-serif); font-size: 38px; font-style: italic; color: var(--text-primary); letter-spacing: -1px; }
+.loader-brand span { color: var(--blue); }
+.loader-ring { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-caption { font-size: 13px; color: var(--text-muted); }
+
+/* ─── COORD BAR ─── */
+#coord-bar {
+  position: fixed; left: 16px; bottom: 24px; z-index: 800;
+  background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: var(--radius-full);
+  padding: 5px 14px; font-size: 11px; color: var(--text-muted);
+  box-shadow: var(--shadow-sm); pointer-events: none; font-variant-numeric: tabular-nums;
+}
+#coord-bar span { color: var(--text-secondary); font-weight: 600; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-brand">Way<span>find</span></div>
+  <div class="loader-ring"></div>
+  <div class="loader-caption">Loading map…</div>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Search Bar -->
+<div id="search-bar">
+  <div id="search-box">
+    <div class="search-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </div>
+    <input type="text" id="search-input" placeholder="Search places, addresses…" autocomplete="off" spellcheck="false"/>
+    <button id="search-clear" title="Clear">✕</button>
+    <button id="search-locate" title="My location">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+      </svg>
+    </button>
+  </div>
+  <div id="autocomplete-results"></div>
+</div>
+
+<!-- Mode Hint -->
+<div id="mode-hint"></div>
+
+<!-- Left Controls -->
+<div id="left-controls">
+  <button class="ctrl-btn" id="route-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/>
+      <path d="M5 8v3a2 2 0 002 2h10a2 2 0 012 2v1"/>
+    </svg>
+    Directions
+  </button>
+  <button class="ctrl-btn" id="trail-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l4-8 4 4 4-6 4 4"/>
+      <circle cx="3" cy="17" r="1.5" fill="currentColor"/>
+      <circle cx="21" cy="11" r="1.5" fill="currentColor"/>
+    </svg>
+    Plan Route
+  </button>
+  <button class="ctrl-btn" id="export-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Save PNG
+  </button>
+</div>
+
+<!-- Right Controls -->
+<div id="right-controls">
+  <button class="ctrl-btn-icon" id="locate-btn" title="My Location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  </button>
+</div>
+
+<!-- Style Switcher — always at bottom, z-index below panels -->
+<div id="style-switcher">
+  <button class="style-pill-btn active" data-style="osm">🗺 Default</button>
+  <button class="style-pill-btn" data-style="dark">🌙 Dark</button>
+  <button class="style-pill-btn" data-style="satellite">🛰 Satellite</button>
+  <button class="style-pill-btn" data-style="topo">🏔 Topo</button>
+</div>
+
+<!-- Coord Bar -->
+<div id="coord-bar">Lat <span id="cb-lat">–</span> Lng <span id="cb-lng">–</span> Z<span id="cb-z">–</span></div>
+
+<!-- ═══ DIRECTIONS PANEL ═══ -->
+<div id="route-panel">
+  <div id="route-panel-header">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--blue);flex-shrink:0">
+      <circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/>
+      <path d="M5 8v3a2 2 0 002 2h10a2 2 0 012 2v1"/>
+    </svg>
+    <span id="route-panel-title">Directions</span>
+    <button id="route-close">✕</button>
+  </div>
+  <div id="route-inputs-container">
+    <div class="route-field-wrapper" id="from-wrapper">
+      <div class="route-field">
+        <div class="route-field-dot dot-from"></div>
+        <input type="text" id="from-input" placeholder="Starting point…" autocomplete="off"/>
+        <button class="route-field-clear" id="from-clear">✕</button>
+      </div>
+      <div class="route-field-ac" id="from-ac"></div>
+    </div>
+    <div class="route-field-wrapper" id="to-wrapper">
+      <div class="route-field">
+        <div class="route-field-dot dot-to"></div>
+        <input type="text" id="to-input" placeholder="Destination…" autocomplete="off"/>
+        <button class="route-field-clear" id="to-clear">✕</button>
+      </div>
+      <div class="route-field-ac" id="to-ac"></div>
+    </div>
+  </div>
+  <div id="route-options">
+    <button class="transport-btn active" data-profile="car">🚗 Drive</button>
+    <button class="transport-btn" data-profile="bike">🚲 Bike</button>
+    <button class="transport-btn" data-profile="foot">🚶 Walk</button>
+    <button id="go-btn" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>
+      Start
+    </button>
+  </div>
+</div>
+
+<!-- ═══ TRAIL ROUTING BAR (compact floating) ═══ -->
+<div id="trail-panel">
+
+  <!-- Waypoint list — slides up above bar when toggled -->
+  <div id="trail-waypoints-panel">
+    <div id="trail-wp-header">
+      <span>Waypoints</span>
+      <button id="trail-wp-close">✕</button>
+    </div>
+    <div id="trail-waypoints-list"></div>
+  </div>
+
+  <!-- The compact main bar -->
+  <div id="trail-bar">
+
+    <!-- Transport mode -->
+    <div id="trail-transport-row">
+      <button class="trail-transport-btn active" data-tprofile="foot" title="Walk">🚶</button>
+      <button class="trail-transport-btn" data-tprofile="bike" title="Cycle">🚲</button>
+      <button class="trail-transport-btn" data-tprofile="car" title="Drive">🚗</button>
+    </div>
+
+    <!-- Stats inline -->
+    <div id="trail-stats-inline">
+      <div class="trail-stat-inline">
+        <span class="tv" id="ts-dist">—</span>
+        <span class="tl">km</span>
+      </div>
+      <div class="trail-stat-inline" style="color:var(--text-muted);font-size:11px">·</div>
+      <div class="trail-stat-inline">
+        <span class="tv" id="ts-time">—</span>
+      </div>
+      <div id="trail-pts-badge" title="Show waypoints">
+        <div class="trail-pulse"></div>
+        <span id="ts-points">0</span> pts
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div id="trail-actions-row">
+      <button class="trail-action-btn" id="trail-undo-btn" disabled title="Undo last point">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>
+      </button>
+      <button class="trail-action-btn danger" id="trail-clear-btn" disabled title="Clear all">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
+      <button class="trail-action-btn success" id="trail-finish-btn" disabled>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Done
+      </button>
+      <button class="trail-action-btn danger" id="trail-close" title="Exit planner" style="margin-left:2px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Nav Bar (turn-by-turn) -->
+<div id="nav-bar">
+  <div id="nav-direction-icon">➡️</div>
+  <div style="flex:1">
+    <div id="nav-step-text">Head north</div>
+    <div id="nav-step-dist">Continue for 400m</div>
+  </div>
+  <div id="nav-stats">
+    <div id="nav-eta">—</div>
+    <div id="nav-dist-remain">—</div>
+  </div>
+  <button id="nav-stop-btn">✕ End</button>
+</div>
+
+<!-- Route Summary Card -->
+<div id="route-summary-card">
+  <div id="route-summary-header">
+    <div class="route-stat-big"><div class="val" id="card-time">—</div><div class="lbl">Duration</div></div>
+    <div class="route-summary-divider"></div>
+    <div class="route-stat-big"><div class="val" id="card-dist">—</div><div class="lbl">Distance</div></div>
+    <div class="route-summary-divider"></div>
+    <div class="route-stat-big"><div class="val" id="card-profile">—</div><div class="lbl">Mode</div></div>
+  </div>
+  <div id="route-summary-actions">
+    <button class="route-action-btn" id="card-edit-btn">✎ Edit</button>
+    <button class="route-action-btn" id="card-clear-btn" style="color:var(--red)">✕ Clear</button>
+    <button class="route-action-btn primary" id="card-go-btn">▶ Navigate</button>
+  </div>
+</div>
+
+<!-- Trail Summary Card -->
+<div id="trail-summary-card">
+  <div id="trail-summary-card-header">
+    <span style="font-size:20px">🥾</span>
+    <div id="trail-summary-card-title">Route Complete</div>
+    <button id="trail-summary-close" style="width:26px;height:26px;border-radius:50%;background:var(--surface2);border:none;cursor:pointer;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;">✕</button>
+  </div>
+  <div id="route-summary-header" style="margin-bottom:12px;">
+    <div class="route-stat-big"><div class="val" id="trail-card-dist">—</div><div class="lbl">Distance</div></div>
+    <div class="route-summary-divider"></div>
+    <div class="route-stat-big"><div class="val" id="trail-card-time">—</div><div class="lbl">Est. Time</div></div>
+    <div class="route-summary-divider"></div>
+    <div class="route-stat-big"><div class="val" id="trail-card-pts">—</div><div class="lbl">Waypoints</div></div>
+  </div>
+  <div id="route-summary-actions">
+    <button class="route-action-btn" id="trail-card-edit-btn">✎ Edit Route</button>
+    <button class="route-action-btn danger" id="trail-card-clear-btn" style="color:var(--red)">✕ Discard</button>
+    <button class="route-action-btn primary" id="trail-card-nav-btn">▶ Navigate</button>
+  </div>
+</div>
+
+<!-- POI Card -->
+<div id="poi-card">
+  <div id="poi-card-header">
+    <div id="poi-card-icon">📍</div>
+    <div id="poi-card-info">
+      <div id="poi-card-name">Place Name</div>
+      <div id="poi-card-type">–</div>
+    </div>
+    <button id="poi-card-close">✕</button>
+  </div>
+  <div id="poi-card-body"></div>
+  <div id="poi-card-actions">
+    <button class="map-popup-btn from" id="poi-set-from">↑ Set Start</button>
+    <button class="map-popup-btn to" id="poi-set-to">↓ Set End</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIG
+// ════════════════════════════════════════════════════════════
+
+const STYLES = {
+  osm: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    max: 19
+  },
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, © <a href="https://carto.com">CARTO</a>',
+    max: 19
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© Esri, DigitalGlobe, GeoEye',
+    max: 18, noS: true
+  },
+  topo: {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attr: '© <a href="https://opentopomap.org">OpenTopoMap</a>',
+    max: 17
+  }
+};
+
+const POI_ICONS = {
+  restaurant:'🍽️', cafe:'☕', bar:'🍺', pub:'🍺', fast_food:'🍔',
+  hotel:'🏨', hostel:'🏨', motel:'🏨', hospital:'🏥', pharmacy:'💊',
+  doctors:'👨‍⚕️', school:'🏫', university:'🎓', library:'📚',
+  museum:'🏛️', theatre:'🎭', cinema:'🎬', arts_centre:'🎨',
+  park:'🌳', garden:'🌺', forest:'🌲', supermarket:'🛒',
+  shop:'🛍️', marketplace:'🏪', bank:'🏦', atm:'💳',
+  fuel:'⛽', parking:'🅿️', church:'⛪', mosque:'🕌',
+  synagogue:'🕍', place_of_worship:'🛕', airport:'✈️',
+  train_station:'🚆', bus_station:'🚌', ferry_terminal:'⛴️',
+  stadium:'🏟️', sports_centre:'🏃', swimming_pool:'🏊',
+  tourist_attraction:'📸', attraction:'📸', viewpoint:'👁️',
+  default:'📍'
+};
+
+const PLAIN_TYPES = new Set([
+  'road','residential','path','footway','cycleway','service',
+  'motorway','trunk','primary','secondary','tertiary','unclassified',
+  'living_street','administrative','postcode','neighbourhood','quarter',
+  'suburb','village','town','city','county','state','country'
+]);
+
+const DIRECTION_ICONS = {
+  SlightRight:'↗️', Right:'➡️', SharpRight:'↘️',
+  SlightLeft:'↖️', Left:'⬅️', SharpLeft:'↙️',
+  Straight:'⬆️', UTurn:'↩️',
+  WaypointReached:'📍', DestinationReached:'🏁',
+  Head:'⬆️', default:'⬆️'
+};
+
+// Trail waypoint colours (cycles through)
+const TRAIL_COLORS = [
+  '#16a34a','#2563eb','#d97706','#dc2626','#7c3aed',
+  '#0891b2','#be123c','#65a30d','#9333ea','#0284c7'
+];
+
+// ════════════════════════════════════════════════════════════
+// MAP INIT
+// ════════════════════════════════════════════════════════════
+
+const map = L.map('map', { center:[51.505,-0.09], zoom:13, zoomControl:false });
+L.control.zoom({ position:'bottomright' }).addTo(map);
+
+let tileLayer = null;
+function setStyle(id) {
+  const s = STYLES[id];
+  if (!s) return;
+  if (tileLayer) map.removeLayer(tileLayer);
+  const opts = { attribution:s.attr, maxZoom:s.max, crossOrigin:true };
+  if (!s.noS) opts.subdomains = 'abc';
+  tileLayer = L.tileLayer(s.url, opts).addTo(map);
+  document.querySelectorAll('.style-pill-btn').forEach(b => b.classList.toggle('active', b.dataset.style === id));
+}
+setStyle('osm');
+
+document.querySelectorAll('.style-pill-btn').forEach(btn => {
+  btn.addEventListener('click', () => setStyle(btn.dataset.style));
+});
+
+// Coord bar
+map.on('move zoom', () => {
+  const c = map.getCenter();
+  document.getElementById('cb-lat').textContent = c.lat.toFixed(5);
+  document.getElementById('cb-lng').textContent = c.lng.toFixed(5);
+  document.getElementById('cb-z').textContent = map.getZoom();
+});
+map.fire('move');
+
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+
+let toastTimer;
+function toast(msg, dur=2800) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function fmtDist(m) {
+  return m >= 1000 ? `${(m/1000).toFixed(1)}km` : `${Math.round(m)}m`;
+}
+
+function fmtTime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h > 0 ? `${h}h ${m}m` : `${m} min`;
+}
+
+function showHint(msg, isTrail=false) {
+  const el = document.getElementById('mode-hint');
+  el.textContent = msg;
+  el.className = 'show' + (isTrail ? ' trail' : '');
+}
+function hideHint() {
+  document.getElementById('mode-hint').classList.remove('show');
+}
+
+// ════════════════════════════════════════════════════════════
+// NOMINATIM
+// ════════════════════════════════════════════════════════════
+
+async function nominatim(query, limit=7) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=${limit}&addressdetails=1&extratags=1`,
+      { headers: {'Accept-Language':'en-US,en'} }
+    );
+    return await r.json();
+  } catch { return []; }
+}
+
+async function nominatimReverse(lat, lng) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&extratags=1`,
+      { headers: {'Accept-Language':'en-US,en'} }
+    );
+    return await r.json();
+  } catch { return null; }
+}
+
+function shortName(item) {
+  if (item.name) return item.name;
+  return (item.display_name || '').split(',')[0].trim();
+}
+
+function shortAddr(item) {
+  const a = item.address || {};
+  return [a.road, a.suburb||a.neighbourhood, a.city||a.town||a.village, a.country]
+    .filter(Boolean).slice(0,3).join(', ');
+}
+
+function typeIcon(type, cat) {
+  const t = (type||cat||'').toLowerCase();
+  const map2 = {
+    restaurant:'🍽️', cafe:'☕', bar:'🍺', hotel:'🏨', hospital:'🏥',
+    school:'🏫', university:'🎓', park:'🌳', museum:'🏛️', shop:'🛍️',
+    supermarket:'🛒', bank:'🏦', pharmacy:'💊', cinema:'🎬',
+    attraction:'📸', viewpoint:'👁️', station:'🚆', airport:'✈️',
+    city:'🏙️', town:'🏘️', village:'🏡', suburb:'🏘️',
+    street:'🛣️', road:'🛣️', residential:'🏠', country:'🌍'
+  };
+  for (const [k,v] of Object.entries(map2)) {
+    if (t.includes(k)) return v;
+  }
+  return '📍';
+}
+
+function isNamedPOI(data) {
+  if (!data || !data.name) return false;
+  if (PLAIN_TYPES.has(data.type)) return false;
+  if (data.category === 'highway' || data.category === 'boundary') return false;
+  return !!(data.category && ['amenity','tourism','leisure','shop','historic',
+    'natural','man_made','sport','building'].includes(data.category));
+}
+
+function humanType(tags) {
+  if (!tags) return '';
+  for (const k of ['amenity','tourism','leisure','shop','building','highway','railway']) {
+    if (tags[k]) return tags[k].replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  }
+  return '';
+}
+
+function poiIcon(tags) {
+  if (!tags) return POI_ICONS.default;
+  for (const k of ['amenity','tourism','leisure','shop','building','man_made']) {
+    const v = tags[k];
+    if (v && POI_ICONS[v]) return POI_ICONS[v];
+  }
+  return POI_ICONS.default;
+}
+
+// ════════════════════════════════════════════════════════════
+// MARKER REGISTRY
+// ════════════════════════════════════════════════════════════
+
+const markers = new Map();
+let markerIdCounter = 0;
+
+function makeMarkerIcon(color='#2563eb', emoji=null) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="custom-marker">
+      <div class="marker-pin" style="background:${color}">
+        ${emoji ? `<span class="marker-emoji">${emoji}</span>` : '<div class="marker-inner"></div>'}
+      </div>
+      <div class="marker-shadow"></div>
+    </div>`,
+    iconSize: [34,44], iconAnchor: [17,44], popupAnchor: [0,-46]
+  });
+}
+
+function addMarker({ latlng, color, emoji, data }) {
+  const id = ++markerIdCounter;
+  const marker = L.marker(latlng, { icon: makeMarkerIcon(color, emoji) }).addTo(map);
+  marker._wayfindId = id;
+  marker.bindPopup(() => buildPopup(id), { maxWidth:300, minWidth:220 });
+  marker.on('click', () => marker.openPopup());
+  markers.set(id, { marker, data: data||{} });
+  return id;
+}
+
+function removeMarker(id) {
+  const e = markers.get(id);
+  if (!e) return;
+  map.removeLayer(e.marker);
+  markers.delete(id);
+}
+
+function buildPopup(markerId) {
+  const entry = markers.get(markerId);
+  if (!entry) return '';
+  const d = entry.data;
+  const name = d.name || 'Location';
+  const addr = d.address || '';
+  const tags = d.tags || {};
+
+  const div = document.createElement('div');
+  div.className = 'map-popup';
+  div.innerHTML = `
+    <div class="map-popup-title">${escHtml(name)}</div>
+    ${addr ? `<div class="map-popup-addr">${escHtml(addr)}</div>` : ''}
+    ${tags.phone||tags.website||tags.opening_hours ? `
+      <div class="map-popup-tags">
+        ${tags.phone ? `<span class="map-popup-tag">📞 ${escHtml(tags.phone)}</span>` : ''}
+        ${tags.website ? `<span class="map-popup-tag">🌐 Website</span>` : ''}
+        ${tags.opening_hours ? `<span class="map-popup-tag">🕐 ${escHtml(tags.opening_hours)}</span>` : ''}
+      </div>` : ''}
+    <div class="map-popup-actions">
+      <button class="map-popup-btn from" data-mid="${markerId}" data-action="from">↑ Start</button>
+      <button class="map-popup-btn to" data-mid="${markerId}" data-action="to">↓ End</button>
+      <button class="map-popup-btn remove" data-mid="${markerId}" data-action="remove">✕ Remove</button>
+    </div>`;
+
+  div.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const action = btn.dataset.action;
+      const mid = parseInt(btn.dataset.mid);
+      const mEntry = markers.get(mid);
+      if (!mEntry) return;
+      const ll = mEntry.marker.getLatLng();
+      if (action === 'remove') {
+        removeMarker(mid); map.closePopup(); toast('Marker removed');
+      } else if (action === 'from') {
+        setRoutePoint('from', [ll.lat, ll.lng], mEntry.data.name||`${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
+        map.closePopup();
+      } else if (action === 'to') {
+        setRoutePoint('to', [ll.lat, ll.lng], mEntry.data.name||`${ll.lat.toFixed(5)},${ll.lng.toFixed(5)}`);
+        map.closePopup();
+      }
+    });
+  });
+  return div;
+}
+
+// ════════════════════════════════════════════════════════════
+// GEOLOCATION
+// ════════════════════════════════════════════════════════════
+
+let locationMarker = null;
+
+function geolocate(cb) {
+  if (!navigator.geolocation) { toast('Geolocation not supported'); return; }
+  toast('Finding your location…');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const {latitude:lat, longitude:lng} = pos.coords;
+    if (locationMarker) { map.removeLayer(locationMarker); locationMarker = null; }
+    locationMarker = L.marker([lat,lng], {
+      icon: L.divIcon({
+        className:'', html:'<div class="loc-dot"></div>',
+        iconSize:[16,16], iconAnchor:[8,8]
+      }), zIndexOffset:1000
+    }).addTo(map);
+    locationMarker.bindPopup('<div class="map-popup"><div class="map-popup-title">You are here</div></div>');
+    map.setView([lat,lng], 15, { animate:true });
+    toast('Location found ✓');
+    if (cb) cb([lat,lng]);
+  }, () => toast('Location access denied'), { enableHighAccuracy:true });
+}
+
+document.getElementById('locate-btn').addEventListener('click', () => geolocate());
+document.getElementById('search-locate').addEventListener('click', () => geolocate());
+
+// ════════════════════════════════════════════════════════════
+// SEARCH BAR — Autocomplete
+// ════════════════════════════════════════════════════════════
+
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+const acResults = document.getElementById('autocomplete-results');
+const searchBox = document.getElementById('search-box');
+let searchTimer, searchMarkerId = null;
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchClear.classList.toggle('show', q.length > 0);
+  clearTimeout(searchTimer);
+  if (q.length < 2) { hideSearchAC(); return; }
+  searchTimer = setTimeout(async () => {
+    const results = await nominatim(q, 7);
+    renderSearchAC(results);
+  }, 320);
+});
+
+searchInput.addEventListener('focus', () => {
+  searchBox.classList.add('focused');
+  if (acResults.children.length > 0) acResults.classList.add('show');
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { hideSearchAC(); searchInput.blur(); }
+  if (e.key === 'Enter') {
+    clearTimeout(searchTimer);
+    nominatim(searchInput.value.trim(), 1).then(r => { if (r[0]) goToResult(r[0]); });
+    hideSearchAC();
+  }
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('show');
+  hideSearchAC();
+  searchInput.focus();
+  if (searchMarkerId !== null) { removeMarker(searchMarkerId); searchMarkerId = null; }
+});
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('search-bar').contains(e.target)) hideSearchAC();
+});
+
+function hideSearchAC() {
+  acResults.classList.remove('show');
+  searchBox.classList.remove('focused');
+}
+
+function renderSearchAC(results) {
+  acResults.innerHTML = '';
+  if (!results.length) {
+    acResults.innerHTML = '<div class="ac-item"><div class="ac-text"><div class="ac-name" style="color:var(--text-muted)">No results found</div></div></div>';
+    acResults.classList.add('show');
+    return;
+  }
+  results.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.innerHTML = `
+      <div class="ac-icon">${typeIcon(r.type, r.category)}</div>
+      <div class="ac-text">
+        <div class="ac-name">${escHtml(shortName(r))}</div>
+        <div class="ac-addr">${escHtml(shortAddr(r))}</div>
+      </div>
+      <div class="ac-type">${escHtml(r.type||r.category||'')}</div>`;
+    div.addEventListener('click', () => { goToResult(r); hideSearchAC(); });
+    acResults.appendChild(div);
+  });
+  acResults.classList.add('show');
+}
+
+function goToResult(r) {
+  const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+  const name = shortName(r);
+  if (searchMarkerId !== null) removeMarker(searchMarkerId);
+  searchMarkerId = addMarker({
+    latlng:[lat,lng], color:'#2563eb',
+    data:{ name, address:shortAddr(r), tags:r.extratags||{} }
+  });
+  map.setView([lat,lng], 16, {animate:true});
+  searchInput.value = name;
+  searchClear.classList.add('show');
+  toast(`Found: ${name}`);
+  markers.get(searchMarkerId)?.marker.openPopup();
+}
+
+// ════════════════════════════════════════════════════════════
+// DIRECTIONS MODE (A→B with form)
+// ════════════════════════════════════════════════════════════
+
+let routeFrom = null, routeTo = null;
+let routeProfile = 'car';
+let routingControl = null;
+let routeSteps = [], currentStepIdx = 0;
+let navigationActive = false;
+
+const fromInput = document.getElementById('from-input');
+const toInput = document.getElementById('to-input');
+const fromClear = document.getElementById('from-clear');
+const toClear = document.getElementById('to-clear');
+const fromAC = document.getElementById('from-ac');
+const toAC = document.getElementById('to-ac');
+const goBtn = document.getElementById('go-btn');
+
+function openRoutePanel() {
+  closeTrailPanel();
+  document.getElementById('route-panel').classList.add('open');
+  document.getElementById('search-bar').classList.add('hidden');
+}
+function closeRoutePanel() {
+  document.getElementById('route-panel').classList.remove('open');
+  document.getElementById('search-bar').classList.remove('hidden');
+}
+
+document.getElementById('route-btn').addEventListener('click', openRoutePanel);
+document.getElementById('route-close').addEventListener('click', closeRoutePanel);
+
+document.querySelectorAll('.transport-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.transport-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    routeProfile = btn.dataset.profile;
+  });
+});
+
+function setupRouteAC(input, acEl, onSelect, clearBtn) {
+  let timer;
+  input.addEventListener('input', () => {
+    clearBtn.classList.toggle('show', input.value.length > 0);
+    clearTimeout(timer);
+    if (input.value.trim().length < 2) { acEl.classList.remove('show'); return; }
+    timer = setTimeout(async () => {
+      const results = await nominatim(input.value.trim(), 5);
+      acEl.innerHTML = '';
+      results.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'route-ac-item';
+        div.innerHTML = `${escHtml(shortName(r))}<small>${escHtml(shortAddr(r))}</small>`;
+        div.addEventListener('click', () => {
+          input.value = shortName(r);
+          clearBtn.classList.add('show');
+          onSelect([parseFloat(r.lat), parseFloat(r.lon)]);
+          acEl.classList.remove('show');
+          updateGoButton();
+        });
+        acEl.appendChild(div);
+      });
+      if (results.length) acEl.classList.add('show');
+    }, 320);
+  });
+  clearBtn.addEventListener('click', () => {
+    input.value = ''; clearBtn.classList.remove('show'); acEl.classList.remove('show');
+    onSelect(null); updateGoButton();
+  });
+}
+
+setupRouteAC(fromInput, fromAC, (ll) => { routeFrom = ll; }, fromClear);
+setupRouteAC(toInput, toAC, (ll) => { routeTo = ll; }, toClear);
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('from-wrapper').contains(e.target)) fromAC.classList.remove('show');
+  if (!document.getElementById('to-wrapper').contains(e.target)) toAC.classList.remove('show');
+});
+
+function updateGoButton() {
+  goBtn.disabled = !(routeFrom && routeTo);
+}
+
+function setRoutePoint(which, ll, label) {
+  if (which === 'from') { routeFrom = ll; fromInput.value = label; fromClear.classList.add('show'); }
+  else { routeTo = ll; toInput.value = label; toClear.classList.add('show'); }
+  updateGoButton();
+  openRoutePanel();
+}
+
+async function resolveInput(input, stored) {
+  if (stored) return stored;
+  const q = input.value.trim();
+  if (!q) return null;
+  const parts = q.split(',').map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return parts;
+  const r = await nominatim(q, 1);
+  if (r[0]) return [parseFloat(r[0].lat), parseFloat(r[0].lon)];
+  return null;
+}
+
+goBtn.addEventListener('click', async () => {
+  const from = await resolveInput(fromInput, routeFrom);
+  const to = await resolveInput(toInput, routeTo);
+  if (!from || !to) { toast('Please fill in both fields'); return; }
+  routeFrom = from; routeTo = to;
+  calcDirectionsRoute(from, to);
+});
+
+function calcDirectionsRoute(from, to, waypoints=[]) {
+  toast('Calculating route…');
+  if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+
+  const allWPs = [
+    L.latLng(from[0],from[1]),
+    ...waypoints.map(w => L.latLng(w[0],w[1])),
+    L.latLng(to[0],to[1])
+  ];
+  const profileMap = { car:'car', bike:'bike', foot:'foot' };
+
+  routingControl = L.Routing.control({
+    waypoints: allWPs,
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1',
+      profile: profileMap[routeProfile]||'car'
+    }),
+    lineOptions: {
+      styles: [
+        { color:'#2563eb', weight:6, opacity:0.9 },
+        { color:'#93c5fd', weight:2, opacity:0.4 }
+      ],
+      extendToWaypoints:true, missingRouteTolerance:0
+    },
+    show:false, addWaypoints:false, fitSelectedRoutes:true,
+    createMarker: (i, wp, n) => {
+      const isFirst = i === 0, isLast = i === n-1;
+      const color = isFirst ? '#059669' : isLast ? '#dc2626' : '#d97706';
+      const label = isFirst ? 'A' : isLast ? 'B' : String.fromCharCode(65+i);
+      return L.marker(wp.latLng, {
+        icon: L.divIcon({
+          className:'',
+          html:`<div style="width:30px;height:30px;border-radius:50%;background:${color};border:3px solid white;color:white;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.25);font-family:var(--font)">${label}</div>`,
+          iconSize:[30,30], iconAnchor:[15,15]
+        })
+      });
+    }
+  }).addTo(map);
+
+  routingControl.on('routesfound', e => {
+    const route = e.routes[0];
+    routeSteps = route.instructions||[];
+    const dist = route.summary.totalDistance, time = route.summary.totalTime;
+    document.getElementById('card-time').textContent = fmtTime(time);
+    document.getElementById('card-dist').textContent = fmtDist(dist);
+    document.getElementById('card-profile').textContent = {car:'🚗',bike:'🚲',foot:'🚶'}[routeProfile]||'🚗';
+    document.getElementById('route-summary-card').classList.add('show');
+    closeRoutePanel();
+    toast(`Route: ${fmtDist(dist)} · ${fmtTime(time)} ✓`);
+  });
+
+  routingControl.on('routingerror', () => toast('Could not find a route between these points'));
+}
+
+document.getElementById('card-edit-btn').addEventListener('click', () => {
+  document.getElementById('route-summary-card').classList.remove('show');
+  openRoutePanel();
+});
+document.getElementById('card-clear-btn').addEventListener('click', clearDirectionsRoute);
+document.getElementById('card-go-btn').addEventListener('click', () => startNavigation());
+
+function clearDirectionsRoute() {
+  if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+  routeFrom = null; routeTo = null;
+  fromInput.value = ''; toInput.value = '';
+  fromClear.classList.remove('show'); toClear.classList.remove('show');
+  document.getElementById('route-summary-card').classList.remove('show');
+  stopNavigation();
+  updateGoButton();
+  toast('Route cleared');
+}
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION MODE
+// ════════════════════════════════════════════════════════════
+
+function startNavigation(steps) {
+  const stepsToUse = (Array.isArray(steps) && steps.length > 0) ? steps : routeSteps;
+  if (!Array.isArray(stepsToUse) || stepsToUse.length === 0) { toast('Calculate a route first'); return; }
+  routeSteps = stepsToUse;
+  navigationActive = true;
+  currentStepIdx = 0;
+  document.getElementById('route-summary-card').classList.remove('show');
+  document.getElementById('trail-summary-card').classList.remove('show');
+  document.getElementById('nav-bar').classList.add('open');
+  document.getElementById('search-bar').classList.add('hidden');
+  updateNavStep(0);
+  toast('Navigation started ✓', 3000);
+}
+
+function stopNavigation() {
+  navigationActive = false;
+  document.getElementById('nav-bar').classList.remove('open');
+  document.getElementById('search-bar').classList.remove('hidden');
+}
+
+document.getElementById('nav-stop-btn').addEventListener('click', () => {
+  stopNavigation();
+  // Clear whichever mode was active
+  if (trailState.isActive) { clearTrailRoute(); }
+  else { clearDirectionsRoute(); }
+});
+
+function updateNavStep(idx) {
+  if (!routeSteps.length) return;
+  const step = routeSteps[Math.min(idx, routeSteps.length-1)];
+  const typeKey = Object.keys(DIRECTION_ICONS).find(k => step.type && step.type.includes(k))||'default';
+  document.getElementById('nav-direction-icon').textContent = DIRECTION_ICONS[typeKey];
+  document.getElementById('nav-step-text').textContent = step.text||'Continue';
+  const distM = step.distance||0;
+  document.getElementById('nav-step-dist').textContent = `Continue for ${fmtDist(distM)}`;
+  let remDist=0, remTime=0;
+  for (let i=idx; i<routeSteps.length; i++) {
+    remDist += routeSteps[i].distance||0;
+    remTime += routeSteps[i].time||0;
+  }
+  document.getElementById('nav-eta').textContent = fmtTime(remTime);
+  document.getElementById('nav-dist-remain').textContent = fmtDist(remDist)+' remaining';
+}
+
+document.addEventListener('keydown', e => {
+  if (!navigationActive) return;
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') { currentStepIdx = Math.min(currentStepIdx+1, routeSteps.length-1); updateNavStep(currentStepIdx); }
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') { currentStepIdx = Math.max(currentStepIdx-1,0); updateNavStep(currentStepIdx); }
+  if (e.key==='Escape') { stopNavigation(); }
+});
+
+// ════════════════════════════════════════════════════════════
+// TRAIL ROUTING MODE — AllTrails-style click-to-plan
+// ════════════════════════════════════════════════════════════
+
+const trailState = {
+  isActive: false,
+  waypoints: [],   // { latlng:[lat,lng], name:str, marker:L.Marker }
+  segments: [],    // { routingCtrl, dist, time, steps, line }
+  totalDist: 0,
+  totalTime: 0,
+  profile: 'foot'
+};
+
+let trailRoutingInProgress = false;
+let wpListOpen = false;
+
+// ── OSRM routing endpoints per profile ──
+// router.project-osrm.org only supports driving.
+// For walking/cycling use routing.openstreetmap.de (supports foot/bike/car)
+function osrmServiceUrl(profile) {
+  // routing.openstreetmap.de supports: foot, bike, car
+  return 'https://routing.openstreetmap.de/routed-' + profile + '/route/v1';
+}
+
+// ── Open/Close trail panel ──
+function openTrailPanel() {
+  closeRoutePanel();
+  stopNavigation();
+  trailState.isActive = true;
+  document.getElementById('trail-panel').classList.add('open');
+  document.getElementById('search-bar').classList.add('hidden');
+  document.getElementById('trail-btn').classList.add('trail-active');
+  document.body.classList.add('trail-mode');
+  showHint('🟢 Click map to place start point', true);
+  updateTrailUI();
+}
+
+function closeTrailPanel() {
+  trailState.isActive = false;
+  document.getElementById('trail-panel').classList.remove('open');
+  document.getElementById('search-bar').classList.remove('hidden');
+  document.getElementById('trail-btn').classList.remove('trail-active');
+  document.body.classList.remove('trail-mode');
+  setWpListOpen(false);
+  hideHint();
+}
+
+document.getElementById('trail-btn').addEventListener('click', () => {
+  trailState.isActive ? closeTrailPanel() : openTrailPanel();
+});
+document.getElementById('trail-close').addEventListener('click', closeTrailPanel);
+
+// ── Transport profile ──
+document.querySelectorAll('.trail-transport-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.trail-transport-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    trailState.profile = btn.dataset.tprofile;
+  });
+});
+
+// ── Waypoint list toggle ──
+function setWpListOpen(open) {
+  wpListOpen = open;
+  document.getElementById('trail-waypoints-panel').classList.toggle('open', open);
+}
+document.getElementById('trail-pts-badge').addEventListener('click', () => {
+  setWpListOpen(!wpListOpen);
+});
+document.getElementById('trail-wp-close').addEventListener('click', () => setWpListOpen(false));
+
+// ── Build a single routing segment between two latlngs ──
+// Returns Promise<{ routingCtrl, dist, time, steps }>
+function buildTrailSegment(fromLL, toLL) {
+  return new Promise((resolve) => {
+    const profile = trailState.profile; // capture at call time
+
+    // Map profile name to OSRM format
+    // routing.openstreetmap.de uses: routed-foot, routed-bike, routed-car
+    const profileMap = { foot:'foot', bike:'bike', car:'car' };
+    const osrmProfile = profileMap[profile] || 'foot';
+
+    const ctrl = L.Routing.control({
+      waypoints: [L.latLng(fromLL[0], fromLL[1]), L.latLng(toLL[0], toLL[1])],
+      router: L.Routing.osrmv1({
+        serviceUrl: osrmServiceUrl(osrmProfile),
+        profile: osrmProfile
+      }),
+      lineOptions: {
+        styles: [
+          { color: '#16a34a', weight: 5, opacity: 0.85 },
+          { color: '#86efac', weight: 2, opacity: 0.35 }
+        ],
+        extendToWaypoints: true,
+        missingRouteTolerance: 0
+      },
+      show: false,
+      addWaypoints: false,
+      fitSelectedRoutes: false,
+      createMarker: () => null
+    }).addTo(map);
+
+    let resolved = false;
+
+    ctrl.on('routesfound', e => {
+      if (resolved) return;
+      resolved = true;
+      const route = e.routes[0];
+      resolve({
+        routingCtrl: ctrl,
+        dist: route.summary.totalDistance,
+        time: route.summary.totalTime,
+        steps: route.instructions || []
+      });
+      recalcTrailTotals();
+      updateTrailStats();
+    });
+
+    ctrl.on('routingerror', () => {
+      if (resolved) return;
+      resolved = true;
+      // Fallback: haversine straight-line estimate
+      const d = map.distance(
+        L.latLng(fromLL[0], fromLL[1]),
+        L.latLng(toLL[0], toLL[1])
+      );
+      const speedMs = profile === 'car' ? 13.9 : profile === 'bike' ? 4.2 : 1.4;
+      resolve({
+        routingCtrl: ctrl,
+        dist: d,
+        time: d / speedMs,
+        steps: []
+      });
+      recalcTrailTotals();
+      updateTrailStats();
+    });
+  });
+}
+
+// ── Re-route a segment by index (used after drag or waypoint removal/insertion) ──
+async function rerouteSegment(segIdx) {
+  const fromWP = trailState.waypoints[segIdx];
+  const toWP   = trailState.waypoints[segIdx + 1];
+  if (!fromWP || !toWP) return;
+
+  const oldSeg = trailState.segments[segIdx];
+  if (oldSeg && oldSeg.routingCtrl) map.removeControl(oldSeg.routingCtrl);
+
+  const newSeg = await buildTrailSegment(fromWP.latlng, toWP.latlng);
+  trailState.segments[segIdx] = newSeg;
+  recalcTrailTotals();
+  updateTrailStats();
+  renderTrailWaypointList();
+}
+
+// ── Make a draggable numbered trail marker ──
+function makeTrailWaypointMarker(latlng, index) {
+  const { color, label } = trailMarkerStyle(index, trailState.waypoints.length);
+
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="trail-marker-el" style="background:${color};cursor:grab" title="Drag to move">${label}</div>`,
+    iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18]
+  });
+
+  const marker = L.marker(latlng, {
+    icon,
+    draggable: true,
+    autoPan: true,
+    zIndexOffset: 500
+  }).addTo(map);
+
+  // ── Drag behaviour ──
+  marker.on('dragstart', () => {
+    // Prevent map clicks from firing during drag
+    document.body.classList.add('trail-dragging');
+    map.closePopup();
+  });
+
+  marker.on('drag', () => {
+    // Live-update the latlng stored in waypoints so adjacent segments
+    // would snap if we recalculate, but we skip mid-drag for performance
+    const idx = trailState.waypoints.findIndex(w => w.marker === marker);
+    if (idx >= 0) trailState.waypoints[idx].latlng = [marker.getLatLng().lat, marker.getLatLng().lng];
+  });
+
+  marker.on('dragend', async () => {
+    document.body.classList.remove('trail-dragging');
+    const idx = trailState.waypoints.findIndex(w => w.marker === marker);
+    if (idx < 0) return;
+
+    const ll = marker.getLatLng();
+    trailState.waypoints[idx].latlng = [ll.lat, ll.lng];
+    trailState.waypoints[idx].name = `${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`;
+
+    // Async reverse geocode for nicer name
+    nominatimReverse(ll.lat, ll.lng).then(r => {
+      if (r) {
+        const name = r.name || (r.display_name || '').split(',')[0].trim();
+        if (name) {
+          trailState.waypoints[idx].name = name;
+          renderTrailWaypointList();
+        }
+      }
+    }).catch(() => {});
+
+    toast('Updating route…');
+
+    // Re-route affected segments: the one ending at this waypoint and the one starting from it
+    const rerouteJobs = [];
+    if (idx > 0) rerouteJobs.push(rerouteSegment(idx - 1));
+    if (idx < trailState.waypoints.length - 1) rerouteJobs.push(rerouteSegment(idx));
+    await Promise.all(rerouteJobs);
+
+    recalcTrailTotals();
+    updateTrailUI();
+    toast('Route updated ✓');
+  });
+
+  // Click to show remove popup (only if not dragging)
+  marker.on('click', () => {
+    if (document.body.classList.contains('trail-dragging')) return;
+    const idx = trailState.waypoints.findIndex(w => w.marker === marker);
+    if (idx >= 0) showTrailMarkerPopup(marker, idx);
+  });
+
+  return marker;
+}
+
+function trailMarkerStyle(index, total) {
+  const isFirst = index === 0;
+  const isLast  = index === total - 1 && total > 1;
+  const color   = isFirst ? '#16a34a' : isLast ? '#dc2626' : TRAIL_COLORS[index % TRAIL_COLORS.length];
+  const label   = isFirst ? '▶' : isLast ? '■' : String(index);
+  return { color, label };
+}
+
+// ── Refresh all marker icons (call after any structural change) ──
+function refreshTrailMarkerIcons() {
+  const total = trailState.waypoints.length;
+  trailState.waypoints.forEach((wp, i) => {
+    const { color, label } = trailMarkerStyle(i, total);
+    wp.marker.setIcon(L.divIcon({
+      className: '',
+      html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -18]
+    }));
+  });
+}
+
+// ── Marker popup (click) ──
+function showTrailMarkerPopup(marker, index) {
+  const wp = trailState.waypoints[index];
+  if (!wp) return;
+  const isFirst = index === 0;
+  const isLast  = index === trailState.waypoints.length - 1;
+  const label   = isFirst ? 'Start' : isLast ? 'End' : `Point ${index + 1}`;
+
+  const div = document.createElement('div');
+  div.className = 'map-popup';
+  div.innerHTML = `
+    <div class="map-popup-title">${label}</div>
+    <div class="map-popup-addr">${escHtml(wp.name)}</div>
+    <div class="map-popup-actions">
+      <button class="map-popup-btn" style="font-size:11px;color:var(--text-muted)" id="twp-drag-hint">⤢ Drag to move</button>
+      ${index > 0 ? `<button class="map-popup-btn remove" id="twp-remove">✕ Remove</button>` : ''}
+    </div>`;
+
+  marker.bindPopup(div, { maxWidth: 240, minWidth: 180 }).openPopup();
+
+  setTimeout(() => {
+    const rb = document.getElementById('twp-remove');
+    if (rb) rb.addEventListener('click', () => { map.closePopup(); removeTrailWaypoint(index); });
+  }, 40);
+}
+
+// ── Remove waypoint, re-route bridging segment if needed ──
+async function removeTrailWaypoint(index) {
+  if (index < 0 || index >= trailState.waypoints.length) return;
+
+  map.removeLayer(trailState.waypoints[index].marker);
+
+  // Segments to destroy: [index-1] and [index]
+  const destroy = [];
+  if (index > 0 && trailState.segments[index - 1]) destroy.push(index - 1);
+  if (trailState.segments[index]) destroy.push(index);
+
+  destroy.sort((a, b) => b - a).forEach(si => {
+    const seg = trailState.segments[si];
+    if (seg && seg.routingCtrl) map.removeControl(seg.routingCtrl);
+    trailState.segments.splice(si, 1);
+  });
+
+  trailState.waypoints.splice(index, 1);
+
+  // If removing a middle waypoint, bridge the gap
+  if (index > 0 && index < trailState.waypoints.length) {
+    const newSeg = await buildTrailSegment(
+      trailState.waypoints[index - 1].latlng,
+      trailState.waypoints[index].latlng
+    );
+    trailState.segments.splice(index - 1, 0, newSeg);
+  }
+
+  refreshTrailMarkerIcons();
+  recalcTrailTotals();
+  updateTrailUI();
+  toast('Point removed');
+}
+
+// ── Handle map click in trail mode ──
+async function handleTrailClick(latlng) {
+  if (trailRoutingInProgress) return;
+
+  const lat = latlng.lat, lng = latlng.lng;
+  let name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+  // Async reverse geocode — update name once it arrives
+  nominatimReverse(lat, lng).then(r => {
+    if (!r) return;
+    const n = r.name || (r.display_name || '').split(',')[0].trim();
+    if (!n) return;
+    // Find the waypoint we just added and update its name
+    const addedIdx = trailState.waypoints.findIndex(
+      w => w.latlng[0] === lat && w.latlng[1] === lng && w.name === name
+    );
+    if (addedIdx >= 0) {
+      trailState.waypoints[addedIdx].name = n;
+      renderTrailWaypointList();
+    }
+  }).catch(() => {});
+
+  const prevCount = trailState.waypoints.length;
+
+  // Create draggable marker
+  const marker = makeTrailWaypointMarker([lat, lng], prevCount);
+  trailState.waypoints.push({ latlng: [lat, lng], name, marker });
+
+  // Route segment from previous → this
+  if (prevCount >= 1) {
+    trailRoutingInProgress = true;
+    refreshTrailMarkerIcons(); // update end marker colour immediately
+    toast('Routing…');
+    const prev = trailState.waypoints[prevCount - 1];
+    const seg = await buildTrailSegment(prev.latlng, [lat, lng]);
+    trailState.segments.push(seg);
+    trailRoutingInProgress = false;
+    toast(`+${fmtDist(seg.dist)}`);
+  } else {
+    refreshTrailMarkerIcons();
+    toast('Start placed — click to add next point');
+  }
+
+  updateTrailUI();
+}
+
+// ── Totals ──
+function recalcTrailTotals() {
+  trailState.totalDist = trailState.segments.reduce((s, seg) => s + (seg.dist || 0), 0);
+  trailState.totalTime = trailState.segments.reduce((s, seg) => s + (seg.time || 0), 0);
+}
+
+// ── Update compact stats inline ──
+function updateTrailStats() {
+  const n = trailState.waypoints.length;
+  document.getElementById('ts-points').textContent = n;
+  document.getElementById('ts-dist').textContent = trailState.totalDist > 0
+    ? (trailState.totalDist >= 1000
+        ? (trailState.totalDist / 1000).toFixed(1)
+        : Math.round(trailState.totalDist) + 'm')
+    : '—';
+  document.getElementById('ts-time').textContent = trailState.totalTime > 0
+    ? fmtTime(trailState.totalTime)
+    : '—';
+}
+
+// ── Full UI refresh ──
+function updateTrailUI() {
+  const n = trailState.waypoints.length;
+
+  // Hint text
+  if      (n === 0) showHint('🟢 Click to place START', true);
+  else if (n === 1) showHint('🔴 Click to place END', true);
+  else              showHint(`📍 Click to extend • drag points to adjust`, true);
+
+  // Buttons
+  document.getElementById('trail-undo-btn').disabled  = n === 0;
+  document.getElementById('trail-clear-btn').disabled = n === 0;
+  document.getElementById('trail-finish-btn').disabled = n < 2;
+
+  updateTrailStats();
+  renderTrailWaypointList();
+}
+
+// ── Render compact waypoint list ──
+function renderTrailWaypointList() {
+  const list = document.getElementById('trail-waypoints-list');
+  list.innerHTML = '';
+
+  if (trailState.waypoints.length === 0) {
+    list.innerHTML = '<div style="padding:10px 8px;font-size:12px;color:var(--text-muted);text-align:center;">No points yet</div>';
+    return;
+  }
+
+  trailState.waypoints.forEach((wp, i) => {
+    const { color, label } = trailMarkerStyle(i, trailState.waypoints.length);
+    const tag = i === 0 ? 'Start' : i === trailState.waypoints.length - 1 ? 'End' : `${i + 1}`;
+    const seg = trailState.segments[i - 1];
+
+    const div = document.createElement('div');
+    div.className = 'trail-wp-item';
+    div.innerHTML = `
+      <div class="trail-wp-dot" style="background:${color}">${tag === 'Start' ? '▶' : tag === 'End' ? '■' : tag}</div>
+      <div class="trail-wp-name">${escHtml(wp.name)}</div>
+      ${seg ? `<div class="trail-wp-dist">${fmtDist(seg.dist)}</div>` : ''}
+      ${i > 0 ? `<button class="trail-wp-remove" data-idx="${i}">✕</button>` : ''}
+    `;
+
+    div.addEventListener('click', () => map.setView(wp.latlng, 16, { animate: true }));
+    list.appendChild(div);
+  });
+
+  list.querySelectorAll('.trail-wp-remove').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      removeTrailWaypoint(parseInt(btn.dataset.idx));
+    });
+  });
+}
+
+// ── Undo ──
+document.getElementById('trail-undo-btn').addEventListener('click', () => {
+  if (trailState.waypoints.length === 0) return;
+  const last = trailState.waypoints.pop();
+  map.removeLayer(last.marker);
+  if (trailState.segments.length > 0) {
+    const seg = trailState.segments.pop();
+    if (seg.routingCtrl) map.removeControl(seg.routingCtrl);
+  }
+  refreshTrailMarkerIcons();
+  recalcTrailTotals();
+  updateTrailUI();
+  toast('Undone');
+});
+
+// ── Clear ──
+document.getElementById('trail-clear-btn').addEventListener('click', clearTrailRoute);
+
+function clearTrailRoute() {
+  trailState.waypoints.forEach(wp => map.removeLayer(wp.marker));
+  trailState.segments.forEach(seg => { if (seg.routingCtrl) map.removeControl(seg.routingCtrl); });
+  trailState.waypoints = [];
+  trailState.segments = [];
+  trailState.totalDist = 0;
+  trailState.totalTime = 0;
+  document.getElementById('trail-summary-card').classList.remove('show');
+  setWpListOpen(false);
+  updateTrailUI();
+  toast('Route cleared');
+}
+
+// ── Finish ──
+document.getElementById('trail-finish-btn').addEventListener('click', () => {
+  if (trailState.waypoints.length < 2) return;
+  recalcTrailTotals();
+  document.getElementById('trail-card-dist').textContent = fmtDist(trailState.totalDist);
+  document.getElementById('trail-card-time').textContent = fmtTime(trailState.totalTime);
+  document.getElementById('trail-card-pts').textContent  = String(trailState.waypoints.length);
+  document.getElementById('trail-summary-card').classList.add('show');
+  closeTrailPanel();
+  hideHint();
+  toast('Route complete! 🥾');
+});
+
+// ── Summary card actions ──
+document.getElementById('trail-summary-close').addEventListener('click', () => {
+  document.getElementById('trail-summary-card').classList.remove('show');
+  openTrailPanel();
+});
+document.getElementById('trail-card-edit-btn').addEventListener('click', () => {
+  document.getElementById('trail-summary-card').classList.remove('show');
+  openTrailPanel();
+});
+document.getElementById('trail-card-clear-btn').addEventListener('click', () => {
+  document.getElementById('trail-summary-card').classList.remove('show');
+  clearTrailRoute();
+  closeTrailPanel();
+});
+document.getElementById('trail-card-nav-btn').addEventListener('click', () => {
+  const allSteps = trailState.segments.flatMap(seg => seg.steps || []);
+  if (allSteps.length === 0) { toast('No turn-by-turn data for this route'); return; }
+  document.getElementById('trail-summary-card').classList.remove('show');
+  startNavigation(allSteps);
+});
+
+// ════════════════════════════════════════════════════════════
+// MAP CLICK — unified handler
+// ════════════════════════════════════════════════════════════
+
+map.on('click', async e => {
+  // If trail mode is active, ALL map clicks go to trail handler
+  if (trailState.isActive) {
+    handleTrailClick(e.latlng);
+    return;
+  }
+
+  // Normal mode: reverse geocode & drop pin or show POI
+  const { lat, lng } = e.latlng;
+  const data = await nominatimReverse(lat, lng);
+
+  if (data && isNamedPOI(data)) {
+    showPoiCard(data, lat, lng);
+  } else {
+    let name = 'Dropped Pin';
+    let addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    let tags = {};
+    if (data && data.display_name) {
+      name = data.name || data.display_name.split(',')[0].trim() || 'Dropped Pin';
+      addr = shortAddr(data) || data.display_name.split(',').slice(0,4).join(', ');
+      tags = data.extratags || {};
+    }
+    toast(`📍 ${name}`);
+    const id = addMarker({ latlng:[lat,lng], color:'#7c3aed', data:{ name, address:addr, tags } });
+    markers.get(id)?.marker.openPopup();
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// POI CARD
+// ════════════════════════════════════════════════════════════
+
+let currentPoiLatLng = null;
+
+function showPoiCard(data, lat, lng) {
+  currentPoiLatLng = [lat, lng];
+  const tags = data.extratags||{};
+  const addr = data.address||{};
+  const name = data.name || data.display_name?.split(',')[0] || 'Place';
+  const type = humanType({ amenity:data.type, ...tags }) || data.category || '';
+  const icon = poiIcon({ amenity:data.type, tourism:tags.tourism, leisure:tags.leisure, shop:tags.shop });
+
+  document.getElementById('poi-card-icon').textContent = icon;
+  document.getElementById('poi-card-name').textContent = name;
+  document.getElementById('poi-card-type').textContent = type;
+
+  const body = document.getElementById('poi-card-body');
+  body.innerHTML = '';
+  const addrStr = [addr.road, addr.house_number].filter(Boolean).join(' ') +
+    (addr.city||addr.town ? ', '+(addr.city||addr.town) : '');
+
+  const rows = [
+    addrStr && { icon:'📌', text:addrStr },
+    tags.phone && { icon:'📞', text:tags.phone },
+    tags.website && { icon:'🌐', text:`<a href="${escHtml(tags.website)}" target="_blank" rel="noopener">${escHtml(tags.website.replace(/^https?:\/\//,'').slice(0,30))}</a>` },
+    tags.opening_hours && { icon:'🕐', text:escHtml(tags.opening_hours) },
+    tags.cuisine && { icon:'🍴', text:escHtml(tags.cuisine.replace(/;/g,', ')) },
+    data.display_name && { icon:'📍', text:`<span style="color:var(--text-muted);font-size:11px">${escHtml(data.display_name.split(',').slice(0,4).join(', '))}</span>` }
+  ].filter(Boolean);
+
+  rows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'poi-detail-row';
+    div.innerHTML = `<span class="poi-detail-icon">${row.icon}</span><span class="poi-detail-text">${row.text}</span>`;
+    body.appendChild(div);
+  });
+
+  document.getElementById('poi-card').classList.add('show');
+  toast(`${icon} ${name}`);
+}
+
+document.getElementById('poi-card-close').addEventListener('click', () => {
+  document.getElementById('poi-card').classList.remove('show');
+});
+
+document.getElementById('poi-set-from').addEventListener('click', () => {
+  if (!currentPoiLatLng) return;
+  const name = document.getElementById('poi-card-name').textContent;
+  setRoutePoint('from', currentPoiLatLng, name);
+  document.getElementById('poi-card').classList.remove('show');
+});
+
+document.getElementById('poi-set-to').addEventListener('click', () => {
+  if (!currentPoiLatLng) return;
+  const name = document.getElementById('poi-card-name').textContent;
+  setRoutePoint('to', currentPoiLatLng, name);
+  document.getElementById('poi-card').classList.remove('show');
+});
+
+// ════════════════════════════════════════════════════════════
+// PNG EXPORT
+// ════════════════════════════════════════════════════════════
+
+document.getElementById('export-btn').addEventListener('click', async () => {
+  toast('Exporting map…');
+  const mapEl = document.getElementById('map');
+  const rect = mapEl.getBoundingClientRect();
+  try {
+    const canvas = await html2canvas(mapEl, {
+      useCORS:true, allowTaint:true,
+      width:rect.width, height:rect.height,
+      scale:2, logging:false, backgroundColor:'#f5f6fa'
+    });
+    const final = document.createElement('canvas');
+    final.width = canvas.width; final.height = canvas.height;
+    const ctx = final.getContext('2d');
+    ctx.drawImage(canvas, 0, 0);
+
+    const wh = final.height, ww = final.width;
+    ctx.fillStyle = 'rgba(255,255,255,0.82)';
+    ctx.fillRect(0, wh-36, ww, 36);
+    ctx.font = 'bold 15px Figtree, sans-serif'; ctx.fillStyle = '#2563eb';
+    ctx.fillText('Wayfind', 14, wh-12);
+    ctx.font = '11px Figtree, sans-serif'; ctx.fillStyle = '#6b7280';
+    const c = map.getCenter();
+    ctx.fillText(`© OpenStreetMap contributors · ${c.lat.toFixed(4)},${c.lng.toFixed(4)} · Z${map.getZoom()} · ${new Date().toLocaleDateString()}`, 100, wh-12);
+
+    const link = document.createElement('a');
+    link.download = `wayfind-${Date.now()}.png`;
+    link.href = final.toDataURL('image/png');
+    link.click();
+    toast('Map saved as PNG ✓');
+  } catch(err) {
+    toast('Export failed — try OSM Standard style');
+    console.error(err);
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// LOADER
+// ════════════════════════════════════════════════════════════
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const l = document.getElementById('loader');
+    l.classList.add('fade');
+    setTimeout(() => l.remove(), 400);
+    map.invalidateSize();
+  }, 1200);
+});
+
+setTimeout(() => map.invalidateSize(), 300);
+
+// Initial hint
+setTimeout(() => {
+  const h = document.getElementById('mode-hint');
+  h.textContent = '💡 Click anywhere to drop a pin • Use Directions or Plan Route for navigation';
+  h.classList.add('show');
+  setTimeout(() => h.classList.remove('show'), 4500);
+}, 1800);
+
+</script>
+</body>
+</html>
