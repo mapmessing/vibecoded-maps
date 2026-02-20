@@ -93,10 +93,9 @@ body.trail-mode #map { cursor: crosshair; }
 /* ─── TOP SEARCH BAR ─── */
 #search-bar {
   position: fixed;
-  top: 16px; left: 50%;
-  transform: translateX(-50%);
+  top: 16px; left: 16px;
   z-index: 1000;
-  width: min(560px, calc(100vw - 32px));
+  width: min(400px, calc(100vw - 32px));
   display: flex; flex-direction: column;
   transition: opacity var(--tr), pointer-events var(--tr);
 }
@@ -187,6 +186,10 @@ body.trail-mode #map { cursor: crosshair; }
 .ctrl-btn.trail-active { background: var(--trail); border-color: var(--trail); color: white; }
 .ctrl-btn.trail-active:hover { background: #15803d; }
 
+.ctrl-divider {
+  height: 1px; background: var(--border); margin: 2px 4px; border-radius: 1px;
+}
+
 /* ─── STYLE SWITCHER — ALWAYS AT BOTTOM ─── */
 #style-switcher {
   position: fixed;
@@ -215,56 +218,77 @@ body.trail-mode #map { cursor: crosshair; }
 .style-pill-btn.tf-key-btn { color: var(--orange); }
 .style-pill-btn.tf-key-btn:hover { background: var(--orange-light); }
 
-/* ─── ROUTE PANEL (redesigned: floating left card) ─── */
+/* ─── ROUTE PANEL — replaces search bar when open ─── */
 #route-panel {
   position: fixed;
-  top: 70px;
+  top: 16px;
   left: 16px;
-  z-index: 1100;
+  z-index: 1101;
   background: var(--white);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   border: 1.5px solid var(--border);
-  width: min(320px, calc(100vw - 32px));
-  padding: 14px 16px 12px;
-  display: flex; flex-direction: column; gap: 10px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 16px 20px 18px;
+  display: flex; flex-direction: column; gap: 14px;
   opacity: 0;
-  transform: translateX(-16px);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.34, 1.35, 0.64, 1);
+  transform: translateY(-6px);
 }
-#route-panel.open { opacity: 1; transform: translateX(0); pointer-events: all; }
+#route-panel.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
 
 #route-panel-header { display: flex; align-items: center; gap: 10px; }
-#route-panel-title { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; }
+#route-panel-title { font-size: 15px; font-weight: 700; color: var(--text-primary); flex: 1; letter-spacing: -0.2px; }
 #route-close {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   background: var(--surface2); border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   color: var(--text-secondary); font-size: 14px; transition: background var(--tr);
 }
 #route-close:hover { background: var(--border); color: var(--red); }
 
-#route-inputs-container { display: flex; flex-direction: column; gap: 6px; }
+/* Vertical connector line between the two route dots */
+#route-inputs-container {
+  display: flex; flex-direction: column; gap: 0;
+  position: relative;
+}
+#route-inputs-connector {
+  position: absolute; left: 20px; top: 46px; bottom: 46px; width: 2px;
+  background: linear-gradient(to bottom, var(--green), var(--red));
+  opacity: 0.35; border-radius: 2px; z-index: 0; pointer-events: none;
+}
+
+.route-field-wrapper { position: relative; flex: 1; display: flex; }
+.route-field-wrapper:first-child { margin-bottom: 8px; }
+.route-field-wrapper .route-field { flex: 1; }
 
 .route-field {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--bg); border-radius: var(--radius-md);
-  border: 1.5px solid var(--border); padding: 8px 12px;
-  transition: border-color var(--tr);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg); border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border); padding: 12px 14px;
+  transition: border-color var(--tr), background var(--tr), box-shadow var(--tr);
+  position: relative; z-index: 1;
 }
-.route-field:focus-within { border-color: var(--blue); background: var(--white); }
-.route-field-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.dot-from { background: var(--green); }
-.dot-to { background: var(--red); }
+.route-field:focus-within {
+  border-color: var(--blue); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+.route-field-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.dot-from { background: var(--green); box-shadow: 0 0 0 3px rgba(5,150,105,0.15); }
+.dot-to   { background: var(--red);   box-shadow: 0 0 0 3px rgba(220,38,38,0.12); }
 .route-field input {
   flex: 1; border: none; background: transparent;
-  font-family: var(--font); font-size: 13px; font-weight: 400;
+  font-family: var(--font); font-size: 14px; font-weight: 400;
   color: var(--text-primary); outline: none; min-width: 0;
 }
 .route-field input::placeholder { color: var(--text-muted); }
 .route-field-clear {
-  width: 20px; height: 20px; border-radius: 50%; background: var(--border);
+  width: 22px; height: 22px; border-radius: 50%; background: var(--border);
   border: none; cursor: pointer; display: none; align-items: center;
   justify-content: center; color: var(--text-secondary); font-size: 12px;
   transition: background var(--tr); flex-shrink: 0;
@@ -272,33 +296,34 @@ body.trail-mode #map { cursor: crosshair; }
 .route-field-clear.show { display: flex; }
 .route-field-clear:hover { background: var(--red-light); color: var(--red); }
 
-.route-field-wrapper { position: relative; flex: 1; display: flex; }
-.route-field-wrapper .route-field { flex: 1; }
-
 .route-field-ac {
   position: absolute; top: 100%; left: 0; right: 0;
   z-index: 5000; background: var(--white);
   border: 1.5px solid var(--blue); border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
-  display: none; max-height: 200px; overflow-y: auto;
+  display: none; max-height: 220px; overflow-y: auto;
   box-shadow: var(--shadow-md);
 }
 .route-field-ac.show { display: block; }
 .route-ac-item {
-  padding: 9px 14px; font-size: 13px; cursor: pointer;
+  padding: 10px 16px; font-size: 13px; cursor: pointer;
   border-bottom: 1px solid var(--border-light); color: var(--text-primary);
   transition: background var(--tr);
 }
 .route-ac-item:last-child { border-bottom: none; }
 .route-ac-item:hover { background: var(--blue-light); color: var(--blue); }
-.route-ac-item small { color: var(--text-muted); font-size: 11px; display: block; }
+.route-ac-item small { color: var(--text-muted); font-size: 11px; display: block; margin-top: 1px; }
 
-#route-options { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#route-options {
+  display: flex; align-items: center; gap: 7px;
+  padding-top: 2px;
+  border-top: 1px solid var(--border-light);
+}
 
 .transport-btn {
-  padding: 6px 11px; border-radius: var(--radius-full);
+  padding: 7px 14px; border-radius: var(--radius-full);
   border: 1.5px solid var(--border); background: transparent;
-  font-family: var(--font); font-size: 12px; font-weight: 600;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
   color: var(--text-secondary); cursor: pointer;
   display: flex; align-items: center; gap: 5px; transition: all var(--tr);
 }
@@ -306,14 +331,14 @@ body.trail-mode #map { cursor: crosshair; }
 .transport-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
 
 #go-btn {
-  margin-left: auto; padding: 8px 18px; border-radius: var(--radius-full);
+  margin-left: auto; padding: 9px 22px; border-radius: var(--radius-full);
   border: none; background: var(--green); color: white;
-  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
-  box-shadow: 0 2px 10px rgba(5,150,105,0.35); transition: all var(--tr);
+  box-shadow: 0 2px 12px rgba(5,150,105,0.35); transition: all var(--tr);
 }
-#go-btn:hover { background: #047857; }
-#go-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#go-btn:hover { background: #047857; box-shadow: 0 4px 18px rgba(5,150,105,0.4); }
+#go-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
 /* ─── NAV BAR ─── */
 #nav-bar {
@@ -492,23 +517,25 @@ body.trail-mode #map { cursor: crosshair; }
 .poi-detail-text a:hover { text-decoration: underline; }
 #poi-card-actions { padding: 10px 16px 14px; display: flex; gap: 7px; border-top: 1px solid var(--border-light); }
 
-/* ─── TRAIL FLOATING BAR ─── */
+/* ─── TRAIL FLOATING BAR — bottom center ─── */
 #trail-panel {
   position: fixed;
   bottom: 80px;
-  left: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
   z-index: 1050;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(12px);
+  max-width: min(680px, calc(100vw - 32px));
+  width: max-content;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 #trail-panel.open {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
   pointer-events: all;
 }
 
@@ -521,21 +548,21 @@ body.trail-mode #map { cursor: crosshair; }
   box-shadow: var(--shadow-lg);
   border: 1.5px solid var(--border);
   overflow: hidden;
-  height: 44px;
+  height: 50px;
 }
 
 #trail-transport-row {
   display: flex;
-  gap: 1px;
-  padding: 4px 6px;
+  gap: 2px;
+  padding: 5px 8px;
   border-right: 1px solid var(--border);
   flex-shrink: 0;
 }
 .trail-transport-btn {
-  width: 30px; height: 30px;
+  width: 34px; height: 34px;
   border-radius: var(--radius-full);
   border: none; background: transparent;
-  font-size: 15px; cursor: pointer;
+  font-size: 17px; cursor: pointer;
   transition: all var(--tr);
   display: flex; align-items: center; justify-content: center;
 }
@@ -548,8 +575,8 @@ body.trail-mode #map { cursor: crosshair; }
 #trail-stats-inline {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
+  gap: 12px;
+  padding: 0 16px;
   flex: 1;
   min-width: 0;
 }
@@ -560,13 +587,13 @@ body.trail-mode #map { cursor: crosshair; }
   white-space: nowrap;
 }
 .trail-stat-inline .tv {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }
 .trail-stat-inline .tl {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -575,11 +602,11 @@ body.trail-mode #map { cursor: crosshair; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
   background: var(--trail-light);
   border: 1px solid var(--trail-mid);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--trail);
   cursor: pointer;
@@ -597,28 +624,28 @@ body.trail-mode #map { cursor: crosshair; }
 #trail-actions-row {
   display: flex;
   align-items: center;
-  gap: 1px;
-  padding: 4px 6px;
+  gap: 2px;
+  padding: 5px 8px;
   border-left: 1px solid var(--border);
   flex-shrink: 0;
 }
 .trail-action-btn {
-  width: 30px; height: 30px;
+  width: 34px; height: 34px;
   border-radius: var(--radius-full);
   border: none; background: transparent;
   cursor: pointer; transition: all var(--tr);
   display: flex; align-items: center; justify-content: center;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 15px;
 }
 .trail-action-btn:hover { background: var(--surface2); color: var(--text-primary); }
 .trail-action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
 .trail-action-btn.danger:hover { background: var(--red-light); color: var(--red); }
 .trail-action-btn.success {
   background: var(--trail); color: white;
-  width: auto; padding: 0 12px;
+  width: auto; padding: 0 14px;
   border-radius: var(--radius-full);
-  font-size: 12px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   gap: 4px;
 }
 .trail-action-btn.success:hover { background: #15803d; }
@@ -633,6 +660,7 @@ body.trail-mode #map { cursor: crosshair; }
   overflow: hidden;
   max-height: 0;
   opacity: 0;
+  width: 100%;
   transition: max-height 0.28s ease, opacity 0.2s ease;
   pointer-events: none;
 }
@@ -759,15 +787,16 @@ body.trail-mode #map { cursor: crosshair; }
 .marker-shadow { width: 10px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 50%; margin-top: 2px; }
 
 .trail-marker-el {
-  width: 28px; height: 28px; border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  border: 2.5px solid white; cursor: pointer;
-  transition: transform var(--tr);
+  font-size: 11px; font-weight: 700; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 2px solid rgba(255,255,255,0.85); cursor: pointer;
+  transition: transform var(--tr), opacity var(--tr);
   font-family: var(--font);
+  opacity: 0.78;
 }
-.trail-marker-el:hover { transform: scale(1.15); }
+.trail-marker-el:hover { transform: scale(1.15); opacity: 1; }
 
 .loc-dot {
   width: 16px; height: 16px; border-radius: 50%;
@@ -782,7 +811,7 @@ body.trail-mode #map { cursor: crosshair; }
 
 /* ─── MODE HINT ─── */
 #mode-hint {
-  position: fixed; top: 96px; left: 50%; transform: translateX(-50%);
+  position: fixed; top: 72px; left: 16px;
   z-index: 999;
   background: rgba(17,24,39,0.5);
   color: white;
@@ -923,10 +952,210 @@ body.trail-mode #map { cursor: crosshair; }
 }
 #gpx-remove-btn:hover { background: var(--red-light); color: var(--red); }
 
+/* ─── TRAIL NAME ROW ─── */
+#trail-name-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--white); border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm); border: 1.5px solid var(--border);
+  padding: 0 14px; height: 40px;
+  width: 100%; /* stretch to match bar width */
+  transition: border-color var(--tr);
+}
+#trail-name-row:focus-within { border-color: var(--trail); }
+#trail-name-icon { font-size: 14px; flex-shrink: 0; color: var(--text-muted); }
+#trail-name-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--font); font-size: 13px; font-weight: 500;
+  color: var(--text-primary); min-width: 0;
+}
+#trail-name-input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+/* ─── SAVE ROUTE MODAL ─── */
+#save-route-modal .modal-box { gap: 14px; }
+#save-route-modal .modal-name-field {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 10px 14px;
+  transition: border-color var(--tr);
+}
+#save-route-modal .modal-name-field:focus-within { border-color: var(--trail); background: var(--white); }
+#save-route-modal .modal-name-field span { font-size: 16px; flex-shrink: 0; }
+#save-route-name {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-family: var(--font); font-size: 14px; color: var(--text-primary);
+}
+#save-route-name::placeholder { color: var(--text-muted); }
+#save-route-modal .save-options {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.save-option-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); cursor: pointer; transition: all var(--tr);
+  text-align: left; width: 100%;
+}
+.save-option-btn:hover { border-color: var(--trail); background: var(--trail-light); }
+.save-option-btn .soi { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; background: var(--surface2); }
+.save-option-btn .sot { flex: 1; }
+.save-option-btn .sot-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.save-option-btn .sot-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* ─── ROUTES LIBRARY PANEL ─── */
+#routes-panel {
+  position: fixed; right: -400px; top: 16px; bottom: 80px;
+  width: min(380px, calc(100vw - 32px));
+  z-index: 950; background: var(--white);
+  border-radius: var(--radius-xl); box-shadow: var(--shadow-xl);
+  border: 1.5px solid var(--border); display: flex; flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;
+}
+#routes-panel.open { right: 16px; }
+#routes-panel-header {
+  padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+}
+#routes-panel-title { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; }
+#routes-panel-close {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--surface2);
+  border: none; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; color: var(--text-secondary); font-size: 14px;
+  transition: background var(--tr);
+}
+#routes-panel-close:hover { background: var(--border); color: var(--red); }
+#routes-list { overflow-y: auto; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+#routes-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 40px 20px; text-align: center; flex: 1;
+}
+#routes-empty .re-icon { font-size: 36px; opacity: 0.4; }
+#routes-empty p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.route-library-item {
+  background: var(--bg); border-radius: var(--radius-md);
+  border: 1.5px solid var(--border); padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color var(--tr), background var(--tr);
+}
+.route-library-item:hover { border-color: var(--trail); background: var(--white); }
+.rli-top { display: flex; align-items: flex-start; gap: 8px; }
+.rli-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.rli-info { flex: 1; min-width: 0; }
+.rli-name { font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rli-date { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.rli-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.rli-stat {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--surface2); border-radius: var(--radius-full);
+  padding: 2px 8px; font-size: 11px; font-weight: 600; color: var(--text-secondary);
+}
+.rli-stat span { color: var(--text-primary); }
+.rli-actions { display: flex; gap: 5px; }
+.rli-btn {
+  flex: 1; padding: 6px 10px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--tr); color: var(--text-primary);
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.rli-btn:hover { border-color: var(--trail); color: var(--trail); background: var(--trail-light); }
+.rli-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.rli-btn.export:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE UI  (≤768px)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Hide desktop left-controls sidebar — replaced by bottom mobile bar */
+  #left-controls { display: none !important; }
+
+  /* Style switcher shifts up to not clash with mobile bar */
+  #style-switcher { bottom: 72px; }
+
+  /* Coord bar hidden on mobile to save space */
+  #coord-bar { display: none; }
+
+  /* ─── MOBILE BOTTOM BAR ─── */
+  #mobile-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 8px 8px env(safe-area-inset-bottom, 8px);
+    gap: 4px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mob-btn {
+    flex: 1;
+    min-width: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 4px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all var(--tr);
+    white-space: nowrap;
+  }
+  .mob-btn svg { width: 20px; height: 20px; }
+  .mob-btn:hover, .mob-btn:active { background: var(--blue-light); color: var(--blue); }
+  .mob-btn.active { color: var(--blue); }
+  .mob-btn.trail-active { color: var(--trail); }
+  .mob-btn.hike-active { color: #16a34a; }
+
+  /* Route summary + trail summary — stack to top on mobile instead of bottom */
+  #route-summary-card, #trail-summary-card {
+    bottom: auto; top: 72px;
+    transform: translateX(-50%) translateY(-20px);
+    max-width: calc(100vw - 24px);
+    min-width: 0;
+  }
+  #route-summary-card.show { transform: translateX(-50%) translateY(0); }
+  #trail-summary-card.show { transform: translateX(-50%) translateY(0); }
+
+  /* Nav bar — taller, more readable on mobile */
+  #nav-bar { padding: 16px 16px env(safe-area-inset-top, 16px); gap: 12px; }
+  #nav-direction-icon { width: 52px; height: 52px; font-size: 26px; }
+  #nav-step-text { font-size: 17px; }
+  #nav-eta { font-size: 22px; }
+
+  /* POI card and GPX bar: full width at bottom */
+  #poi-card { width: calc(100vw - 24px); right: 12px; bottom: 72px; }
+  #gpx-info-bar { bottom: 72px; right: 12px; max-width: calc(100vw - 24px); }
+
+  /* Instructions panel: full screen on mobile */
+  #instructions-panel { left: 0; right: 0; top: auto; bottom: 64px; width: 100%; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+  #instructions-panel.open { right: 0; }
+
+  /* Search bar: allow full width on mobile */
+  #search-bar { width: calc(100vw - 24px); left: 12px; }
+  /* Route panel: full width on mobile */
+  #route-panel { width: calc(100vw - 24px); top: 64px; left: 12px; }
+}
+
+/* Hide mobile bar on desktop */
+@media (min-width: 769px) {
+  #mobile-bar { display: none !important; }
+  /* Navigation mode is mobile-only — hide Go buttons and nav bar on desktop */
+  #card-go-btn        { display: none !important; }
+  #trail-card-nav-btn { display: none !important; }
+  #nav-bar            { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -951,6 +1180,9 @@ body.trail-mode #map { cursor: crosshair; }
     </div>
     <input type="text" id="search-input" placeholder="Search places, addresses…" autocomplete="off" spellcheck="false"/>
     <button id="search-clear" title="Clear">✕</button>
+    <button id="search-routes-btn" title="Saved routes &amp; GPX" style="width:32px;height:32px;border-radius:50%;background:var(--trail-light);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--trail);flex-shrink:0;transition:background var(--tr);">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    </button>
     <button id="search-locate" title="My location">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
@@ -980,26 +1212,26 @@ body.trail-mode #map { cursor: crosshair; }
     </svg>
     Plan Route
   </button>
+  <div class="ctrl-divider"></div>
+  <button class="ctrl-btn" id="locate-btn" title="My Location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </svg>
+    My Location
+  </button>
+  <button class="ctrl-btn" id="hiking-toggle-btn" title="Toggle Hiking Routes Overlay" onclick="toggleHiking()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l4-8 4 3 4-7 4 5M12 2l2 5h5l-4 3 1.5 5L12 12l-4.5 3L9 10 5 7h5z" opacity="0"/>
+      <path d="M3 20h18M8 20l2-6 3 2 3-5 2 3"/><circle cx="12" cy="6" r="2"/>
+    </svg>
+    🥾 Hiking
+  </button>
   <button class="ctrl-btn" id="export-btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
       <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
     </svg>
     Save PNG
-  </button>
-  <button class="ctrl-btn" id="gpx-load-btn">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/>
-      <line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>
-    </svg>
-    Load GPX
-  </button>
-  <button class="ctrl-btn" id="locate-btn" title="My Location">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-    </svg>
-    My Location
   </button>
 </div>
 
@@ -1029,10 +1261,11 @@ body.trail-mode #map { cursor: crosshair; }
     <button id="route-close">✕</button>
   </div>
   <div id="route-inputs-container">
+    <div id="route-inputs-connector"></div>
     <div class="route-field-wrapper" id="from-wrapper">
       <div class="route-field">
         <div class="route-field-dot dot-from"></div>
-        <input type="text" id="from-input" placeholder="Starting point…" autocomplete="off"/>
+        <input type="text" id="from-input" placeholder="Starting point… or click map 📍" autocomplete="off"/>
         <button class="route-field-clear" id="from-clear">✕</button>
       </div>
       <div class="route-field-ac" id="from-ac"></div>
@@ -1040,7 +1273,7 @@ body.trail-mode #map { cursor: crosshair; }
     <div class="route-field-wrapper" id="to-wrapper">
       <div class="route-field">
         <div class="route-field-dot dot-to"></div>
-        <input type="text" id="to-input" placeholder="Destination…" autocomplete="off"/>
+        <input type="text" id="to-input" placeholder="Destination… or click map 📍" autocomplete="off"/>
         <button class="route-field-clear" id="to-clear">✕</button>
       </div>
       <div class="route-field-ac" id="to-ac"></div>
@@ -1065,6 +1298,11 @@ body.trail-mode #map { cursor: crosshair; }
       <button id="trail-wp-close">✕</button>
     </div>
     <div id="trail-waypoints-list"></div>
+  </div>
+  <!-- Route name input row -->
+  <div id="trail-name-row">
+    <span id="trail-name-icon">✏️</span>
+    <input type="text" id="trail-name-input" placeholder="Route — 20 Feb 2026" autocomplete="off" maxlength="60"/>
   </div>
   <div id="trail-bar">
     <div id="trail-transport-row">
@@ -1094,6 +1332,9 @@ body.trail-mode #map { cursor: crosshair; }
       </button>
       <button class="trail-action-btn danger" id="trail-clear-btn" disabled title="Clear all">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
+      <button class="trail-action-btn" id="trail-library-btn" title="Saved routes">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       </button>
       <button class="trail-action-btn success" id="trail-finish-btn" disabled>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1159,7 +1400,8 @@ body.trail-mode #map { cursor: crosshair; }
   <div id="tsc-actions">
     <button class="tsc-btn" id="trail-card-steps-btn" title="Turn-by-turn">📋</button>
     <button class="tsc-btn" id="trail-card-edit-btn" title="Edit route">✎ Edit</button>
-    <button class="tsc-btn" id="trail-card-gpx-btn" title="Save GPX">💾</button>
+    <button class="tsc-btn" id="trail-card-save-btn" title="Save route">💾 Save</button>
+    <button class="tsc-btn" id="trail-card-library-btn" title="Saved routes">📚</button>
     <button class="tsc-btn danger" id="trail-card-clear-btn" title="Clear route">✕</button>
     <button class="tsc-btn primary" id="trail-card-nav-btn">▶ Go</button>
   </div>
@@ -1205,6 +1447,92 @@ body.trail-mode #map { cursor: crosshair; }
   </div>
   <button id="gpx-edit-btn">✎ Edit</button>
   <button id="gpx-remove-btn" title="Remove GPX">✕</button>
+</div>
+
+<!-- ═══ SAVE ROUTE MODAL ═══ -->
+<div class="modal-overlay" id="save-route-modal">
+  <div class="modal-box">
+    <div class="modal-title">💾 Save Route</div>
+    <div class="modal-name-field">
+      <span>🥾</span>
+      <input type="text" id="save-route-name" placeholder="Route name…" maxlength="60" autocomplete="off"/>
+    </div>
+    <div class="save-options">
+      <button class="save-option-btn" id="save-to-library-btn">
+        <div class="soi">📚</div>
+        <div class="sot">
+          <div class="sot-title">Save to Library</div>
+          <div class="sot-desc">Store in browser — access anytime from saved routes</div>
+        </div>
+      </button>
+      <button class="save-option-btn" id="save-as-gpx-btn">
+        <div class="soi">📁</div>
+        <div class="sot">
+          <div class="sot-title">Export as GPX</div>
+          <div class="sot-desc">Download a .gpx file to use in other apps</div>
+        </div>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="save-route-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ROUTES LIBRARY PANEL ═══ -->
+<div id="routes-panel">
+  <div id="routes-panel-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--trail);flex-shrink:0"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span id="routes-panel-title">Saved Routes</span>
+    <button id="routes-panel-gpx-btn" title="Load GPX file" style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--radius-full);border:1.5px solid var(--purple);background:transparent;font-family:var(--font);font-size:12px;font-weight:600;color:var(--purple);cursor:pointer;transition:all var(--tr);white-space:nowrap;flex-shrink:0;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+      Load GPX
+    </button>
+    <button id="routes-panel-close">✕</button>
+  </div>
+  <div id="routes-list"></div>
+</div>
+
+<!-- Mobile Bottom Bar (hidden on desktop via CSS) -->
+<div id="mobile-bar" style="display:none">
+  <button class="mob-btn" id="mob-route-btn" onclick="openRoutePanel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/>
+      <path d="M5 8v3a2 2 0 002 2h10a2 2 0 012 2v1"/>
+    </svg>
+    Directions
+  </button>
+  <button class="mob-btn" id="mob-trail-btn" onclick="trailState.isActive?closeTrailPanel():openTrailPanel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 17l4-8 4 4 4-6 4 4"/>
+    </svg>
+    Plan Route
+  </button>
+  <button class="mob-btn" id="mob-locate-btn" onclick="geolocate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </svg>
+    Location
+  </button>
+  <button class="mob-btn" id="mob-hike-btn" onclick="toggleHiking();this.classList.toggle('hike-active',hikingActive)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 20h18M8 20l2-6 3 2 3-5 2 3"/><circle cx="12" cy="6" r="2"/>
+    </svg>
+    Hiking
+  </button>
+  <button class="mob-btn" id="mob-export-btn" onclick="doExport()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Save PNG
+  </button>
+  <button class="mob-btn" id="mob-gpx-btn" onclick="openRoutesPanel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+    </svg>
+    Routes
+  </button>
 </div>
 
 <!-- Toast -->
@@ -1264,6 +1592,26 @@ function buildStyles() {
   }
 }
 buildStyles();
+
+// ─── HIKING OVERLAY ───
+let hikingLayer = null;
+let hikingActive = false;
+function toggleHiking() {
+  if (hikingActive) {
+    if (hikingLayer) { map.removeLayer(hikingLayer); hikingLayer = null; }
+    hikingActive = false;
+    document.getElementById('hiking-toggle-btn').classList.remove('active');
+    toast('Hiking routes hidden');
+  } else {
+    hikingLayer = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+      maxZoom: 19, opacity: 0.8,
+      attribution: '© <a href="https://hiking.waymarkedtrails.org">Waymarked Trails</a>'
+    }).addTo(map);
+    hikingActive = true;
+    document.getElementById('hiking-toggle-btn').classList.add('active');
+    toast('🥾 Hiking routes overlay on');
+  }
+}
 
 const POI_ICONS = {
   restaurant:'🍽️', cafe:'☕', bar:'🍺', pub:'🍺', fast_food:'🍔',
@@ -1750,7 +2098,9 @@ let routeFrom = null, routeTo = null;
 let routeProfile = 'car';
 let routingControl = null;
 let routeSteps = [], currentStepIdx = 0;
+let routeCoordinates = []; // lat/lng array for GPS nav
 let navigationActive = false;
+let gpsWatchId = null;
 
 const fromInput = document.getElementById('from-input');
 const toInput   = document.getElementById('to-input');
@@ -1761,13 +2111,15 @@ const toAC      = document.getElementById('to-ac');
 const goBtn     = document.getElementById('go-btn');
 
 function openRoutePanel() {
-  closeTrailPanel();
+  if (!closeTrailPanel()) return; // aborted by user (unsaved warning)
   document.getElementById('route-panel').classList.add('open');
   document.getElementById('search-bar').classList.add('hidden');
 }
 function closeRoutePanel() {
   document.getElementById('route-panel').classList.remove('open');
   document.getElementById('search-bar').classList.remove('hidden');
+  activeRouteField = null;
+  setActiveRouteField(null);
 }
 
 document.getElementById('route-btn').addEventListener('click', openRoutePanel);
@@ -1817,6 +2169,21 @@ function setupRouteAC(input, acEl, onSelect, clearBtn) {
   });
 }
 
+let activeRouteField = null; // 'from' | 'to' | null
+
+function setActiveRouteField(which) {
+  activeRouteField = which;
+  // Visual indicator on the active field
+  const fromField = document.getElementById('from-wrapper').querySelector('.route-field');
+  const toField = document.getElementById('to-wrapper').querySelector('.route-field');
+  if (fromField) fromField.style.boxShadow = which === 'from' ? '0 0 0 3px rgba(5,150,105,0.18)' : '';
+  if (toField) toField.style.boxShadow = which === 'to' ? '0 0 0 3px rgba(220,38,38,0.18)' : '';
+}
+
+fromInput.addEventListener('focus', () => setActiveRouteField('from'));
+toInput.addEventListener('focus', () => setActiveRouteField('to'));
+
+// Clear active field when route panel closes (handled in closeRoutePanel)
 setupRouteAC(fromInput, fromAC, (ll) => { routeFrom = ll; }, fromClear);
 setupRouteAC(toInput, toAC, (ll) => { routeTo = ll; }, toClear);
 
@@ -1899,7 +2266,8 @@ function calcDirectionsRoute(from, to) {
 
   routingControl.on('routesfound', e => {
     const route = e.routes[0];
-    routeSteps = route.instructions || [];
+    routeSteps = dedupeSteps(route.instructions || []);
+    routeCoordinates = route.coordinates || [];
     const dist = route.summary.totalDistance, time = route.summary.totalTime;
     document.getElementById('rsc-time').textContent = fmtTime(time);
     document.getElementById('rsc-dist').textContent = fmtDist(dist);
@@ -1939,6 +2307,21 @@ function clearDirectionsRoute() {
 // INSTRUCTIONS PANEL
 // ════════════════════════════════════════════════════════════
 
+// Deduplicate consecutive identical step texts and remove "arrived" duplicates
+function dedupeSteps(steps) {
+  if (!steps || steps.length === 0) return [];
+  const out = [];
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    // Skip if same text as previous step
+    if (out.length > 0 && out[out.length - 1].text === s.text) continue;
+    // Skip duplicate DestinationReached / WaypointReached at the very end
+    if (i > 0 && i === steps.length - 1 && out.some(x => x.type && x.type.includes('DestinationReached'))) continue;
+    out.push(s);
+  }
+  return out;
+}
+
 function showInstructionsPanel(steps) {
   if (!steps || steps.length === 0) { toast('No turn-by-turn data available'); return; }
   const list = document.getElementById('instr-list');
@@ -1964,16 +2347,34 @@ document.getElementById('instr-close').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════════════════
-// NAVIGATION MODE
+// NAVIGATION MODE — GPS-tracked on mobile, manual on desktop
 // ════════════════════════════════════════════════════════════
 
 let navSource = 'directions'; // 'directions' | 'trail'
+let navUserMarker = null;
+let navSegmentCoords = []; // flattened coordinates for GPS nav
+
+const IS_MOBILE = () => window.innerWidth <= 768;
 
 function startNavigation(steps, source) {
+  // Navigation mode is mobile-only
+  if (!IS_MOBILE()) return;
+
   const stepsToUse = (Array.isArray(steps) && steps.length > 0) ? steps : routeSteps;
   if (!Array.isArray(stepsToUse) || stepsToUse.length === 0) { toast('Calculate a route first'); return; }
+
   routeSteps = stepsToUse;
   navSource = source || 'directions';
+
+  // Build coordinate array for GPS proximity checks
+  if (source === 'trail') {
+    navSegmentCoords = trailState.segments.flatMap(seg =>
+      seg.routingCtrl?._routes?.[0]?.coordinates?.map(c => [c.lat, c.lng]) || []
+    );
+  } else {
+    navSegmentCoords = (routeCoordinates || []).map(c => [c.lat, c.lng]);
+  }
+
   navigationActive = true;
   currentStepIdx = 0;
   document.getElementById('route-summary-card').classList.remove('show');
@@ -1982,13 +2383,80 @@ function startNavigation(steps, source) {
   document.getElementById('nav-bar').classList.add('open');
   document.getElementById('search-bar').classList.add('hidden');
   updateNavStep(0);
-  toast('Navigation started ✓', 3000);
+
+  // Start GPS watch on mobile
+  if (IS_MOBILE() && navigator.geolocation) {
+    gpsWatchId = navigator.geolocation.watchPosition(
+      pos => onNavGPSUpdate(pos),
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+    toast('Navigation started — GPS active 📡', 3000);
+  } else {
+    toast('Navigation started ✓  (← → to step through)', 3500);
+  }
+}
+
+function onNavGPSUpdate(pos) {
+  if (!navigationActive) return;
+  const lat = pos.coords.latitude, lng = pos.coords.longitude;
+
+  // Update or create nav user marker
+  if (!navUserMarker) {
+    navUserMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div style="width:18px;height:18px;border-radius:50%;background:#2563eb;border:3px solid white;box-shadow:0 0 0 4px rgba(37,99,235,0.25);"></div>',
+        iconSize: [18,18], iconAnchor: [9,9]
+      }), zIndexOffset: 2000
+    }).addTo(map);
+  } else {
+    navUserMarker.setLatLng([lat, lng]);
+  }
+  map.panTo([lat, lng], { animate: true, duration: 0.5 });
+
+  // Auto-advance step when within 25m of the next step's waypoint
+  if (currentStepIdx < routeSteps.length - 1) {
+    const nextStep = routeSteps[currentStepIdx + 1];
+    const coordIdx = nextStep.index ?? null;
+    if (coordIdx !== null && navSegmentCoords[coordIdx]) {
+      const [slat, slng] = navSegmentCoords[coordIdx];
+      const dist = haversineM(lat, lng, slat, slng);
+      if (dist < 30) {
+        currentStepIdx++;
+        updateNavStep(currentStepIdx);
+        // Only announce arrival at the very last step (DestinationReached)
+        if (currentStepIdx === routeSteps.length - 1) {
+          const lastStep = routeSteps[currentStepIdx];
+          const isDestination = lastStep.type && lastStep.type.includes('DestinationReached');
+          if (isDestination) {
+            toast('🏁 You have arrived!', 4000);
+          }
+        }
+      }
+    }
+  }
+}
+
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lat2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 function stopNavigation() {
   navigationActive = false;
   document.getElementById('nav-bar').classList.remove('open');
   document.getElementById('search-bar').classList.remove('hidden');
+  // Stop GPS watch
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+  // Remove nav user marker
+  if (navUserMarker) { map.removeLayer(navUserMarker); navUserMarker = null; }
 }
 
 // Nav stop button: end nav, return to route info (don't clear)
@@ -2059,10 +2527,22 @@ function openTrailPanel() {
   document.getElementById('search-bar').classList.add('hidden');
   document.getElementById('trail-btn').classList.add('trail-active');
   document.body.classList.add('trail-mode');
+  // Reset name input if starting fresh (no waypoints yet)
+  if (trailState.waypoints.length === 0) {
+    document.getElementById('trail-name-input').value = '';
+  }
+  // Update placeholder to today's date
+  document.getElementById('trail-name-input').placeholder = defaultRouteName();
   updateTrailUI();
 }
 
-function closeTrailPanel() {
+function closeTrailPanel(force) {
+  // Warn if there are unsaved waypoints (unless forced)
+  if (!force && trailState.waypoints.length >= 2 && !trailState._saved) {
+    if (!confirm('You have an unsaved route. Discard it?')) return false;
+    // User confirmed discard — clear the route
+    clearTrailRouteNoToast();
+  }
   trailState.isActive = false;
   document.getElementById('trail-panel').classList.remove('open');
   document.getElementById('search-bar').classList.remove('hidden');
@@ -2070,12 +2550,32 @@ function closeTrailPanel() {
   document.body.classList.remove('trail-mode');
   setWpListOpen(false);
   hideHint();
+  // If route is still present but panel is closing (shouldn't normally be here), clear
+  if (!force && trailState.waypoints.length > 0) {
+    document.getElementById('trail-summary-card').classList.remove('show');
+    clearTrailRouteNoToast();
+  }
+  return true;
 }
 
 document.getElementById('trail-btn').addEventListener('click', () => {
-  trailState.isActive ? closeTrailPanel() : openTrailPanel();
+  // If the finished route summary card is showing, warn and re-open planner
+  if (document.getElementById('trail-summary-card').classList.contains('show')) {
+    if (!trailState._saved && trailState.waypoints.length >= 2) {
+      if (!confirm('Open planner? Your unsaved route will be lost.')) return;
+    }
+    document.getElementById('trail-summary-card').classList.remove('show');
+    clearTrailRouteNoToast();
+    openTrailPanel();
+    return;
+  }
+  if (trailState.isActive) {
+    closeTrailPanel();
+  } else {
+    openTrailPanel();
+  }
 });
-document.getElementById('trail-close').addEventListener('click', closeTrailPanel);
+document.getElementById('trail-close').addEventListener('click', () => closeTrailPanel());
 
 // Trail transport — re-route ALL segments on change
 document.querySelectorAll('.trail-transport-btn').forEach(btn => {
@@ -2131,6 +2631,22 @@ function buildTrailSegment(fromLL, toLL) {
       if (resolved) return;
       resolved = true;
       const route = e.routes[0];
+      // Attach click handler to route line for inserting waypoints
+      setTimeout(() => {
+        if (ctrl._line) {
+          ctrl._line.eachLayer(layer => {
+            if (layer instanceof L.Polyline) {
+              layer.on('click', function(ev) {
+                if (!trailState.isActive || trailRoutingInProgress) return;
+                const segIdx = trailState.segments.findIndex(s => s.routingCtrl === ctrl);
+                if (segIdx < 0) return;
+                L.DomEvent.stopPropagation(ev);
+                insertTrailWaypoint(segIdx + 1, ev.latlng);
+              });
+            }
+          });
+        }
+      }, 150);
       // Resolve with data — caller is responsible for pushing to segments then recalculating
       resolve({ routingCtrl: ctrl, dist: route.summary.totalDistance, time: route.summary.totalTime, steps: route.instructions || [] });
     });
@@ -2163,7 +2679,7 @@ function makeTrailWaypointMarker(latlng, index) {
   const icon = L.divIcon({
     className: '',
     html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
-    iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-18]
+    iconSize: [24,24], iconAnchor: [12,12], popupAnchor: [0,-16]
   });
   const marker = L.marker(latlng, { icon, draggable: true, autoPan: true, zIndexOffset: 500 }).addTo(map);
 
@@ -2225,7 +2741,7 @@ function refreshTrailMarkerIcons() {
     wp.marker.setIcon(L.divIcon({
       className: '',
       html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
-      iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-18]
+      iconSize: [24,24], iconAnchor: [12,12], popupAnchor: [0,-16]
     }));
   });
 }
@@ -2253,6 +2769,44 @@ async function removeTrailWaypoint(index) {
   recalcTrailTotals();
   updateTrailUI();
   toast('Point removed');
+}
+
+async function insertTrailWaypoint(insertAt, latlng) {
+  if (trailRoutingInProgress) return;
+  const lat = latlng.lat, lng = latlng.lng;
+  const name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  const segIdx = insertAt - 1; // segment between insertAt-1 and insertAt
+
+  // Remove existing segment
+  if (trailState.segments[segIdx] && trailState.segments[segIdx].routingCtrl) {
+    map.removeControl(trailState.segments[segIdx].routingCtrl);
+  }
+
+  // Create new marker and insert waypoint
+  const marker = makeTrailWaypointMarker([lat, lng], insertAt);
+  trailState.waypoints.splice(insertAt, 0, { latlng: [lat, lng], name, marker });
+  refreshTrailMarkerIcons();
+
+  trailRoutingInProgress = true;
+  toast('Inserting waypoint…');
+
+  // Build two new segments replacing the old one
+  const prevWP = trailState.waypoints[insertAt - 1];
+  const nextWP = trailState.waypoints[insertAt + 1];
+  const segA = await buildTrailSegment(prevWP.latlng, [lat, lng]);
+  const segB = await buildTrailSegment([lat, lng], nextWP.latlng);
+
+  trailState.segments.splice(segIdx, 1, segA, segB);
+  trailRoutingInProgress = false;
+  recalcTrailTotals();
+  updateTrailUI();
+  saveDraft();
+  toast('Waypoint inserted ✓');
+  nominatimReverse(lat, lng).then(r => {
+    if (!r) return;
+    const n = r.name || (r.display_name || '').split(',')[0].trim();
+    if (n) { trailState.waypoints[insertAt].name = n; renderTrailWaypointList(); }
+  }).catch(() => {});
 }
 
 async function handleTrailClick(latlng) {
@@ -2285,6 +2839,7 @@ async function handleTrailClick(latlng) {
     refreshTrailMarkerIcons();
   }
   updateTrailUI();
+  if (trailState.waypoints.length >= 2) saveDraft();
 }
 
 function recalcTrailTotals() {
@@ -2352,17 +2907,26 @@ document.getElementById('trail-undo-btn').addEventListener('click', () => {
 // Clear
 document.getElementById('trail-clear-btn').addEventListener('click', clearTrailRoute);
 
-function clearTrailRoute() {
+function clearTrailRouteInternal() {
   trailState.waypoints.forEach(wp => map.removeLayer(wp.marker));
   trailState.segments.forEach(seg => { if (seg.routingCtrl) map.removeControl(seg.routingCtrl); });
   trailState.waypoints = [];
   trailState.segments = [];
   trailState.totalDist = 0;
   trailState.totalTime = 0;
+  trailState._saved = false;
   document.getElementById('trail-summary-card').classList.remove('show');
   document.getElementById('instructions-panel').classList.remove('open');
   setWpListOpen(false);
   updateTrailUI();
+}
+
+function clearTrailRouteNoToast() {
+  clearTrailRouteInternal();
+}
+
+function clearTrailRoute() {
+  clearTrailRouteInternal();
   toast('Route cleared');
 }
 
@@ -2374,8 +2938,9 @@ document.getElementById('trail-finish-btn').addEventListener('click', () => {
   document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
   document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
   document.getElementById('trail-summary-card').classList.add('show');
-  closeTrailPanel();
+  closeTrailPanel(true); // force close without warning — route is still accessible in summary
   hideHint();
+  saveDraft();
   toast('Route complete! 🥾');
 });
 
@@ -2387,42 +2952,72 @@ document.getElementById('trail-card-edit-btn').addEventListener('click', () => {
 document.getElementById('trail-card-clear-btn').addEventListener('click', () => {
   document.getElementById('trail-summary-card').classList.remove('show');
   clearTrailRoute();
-  closeTrailPanel();
+  closeTrailPanel(true);
 });
 document.getElementById('trail-card-nav-btn').addEventListener('click', () => {
-  const allSteps = trailState.segments.flatMap(seg => seg.steps || []);
+  const allSteps = dedupeSteps(trailState.segments.flatMap(seg => seg.steps || []));
   if (allSteps.length === 0) { toast('No turn-by-turn data for this route'); return; }
   document.getElementById('trail-summary-card').classList.remove('show');
   startNavigation(allSteps, 'trail');
 });
 document.getElementById('trail-card-steps-btn').addEventListener('click', () => {
-  const allSteps = trailState.segments.flatMap(seg => seg.steps || []);
+  const allSteps = dedupeSteps(trailState.segments.flatMap(seg => seg.steps || []));
   showInstructionsPanel(allSteps);
-});
-document.getElementById('trail-card-gpx-btn').addEventListener('click', () => {
-  saveGPX('trail');
 });
 
 // ════════════════════════════════════════════════════════════
 // GPX LOAD / SAVE
-// ════════════════════════════════════════════════════════════
+// GPX LOAD / SAVE — with RDP simplification
 
-let gpxLayer = null;          // raw preview polyline
-let gpxRawPoints = [];        // stored [lat, lng] array from file
+// ── Ramer-Douglas-Peucker simplification (geographic coords) ──
+function rdpSimplify(points, tolerance) {
+  if (points.length <= 2) return points.slice();
+  function perpDist(p, a, b) {
+    const dx = b[0]-a[0], dy = b[1]-a[1];
+    const lenSq = dx*dx + dy*dy;
+    if (lenSq === 0) return Math.hypot(p[0]-a[0], p[1]-a[1]);
+    const t = Math.max(0, Math.min(1, ((p[0]-a[0])*dx + (p[1]-a[1])*dy) / lenSq));
+    return Math.hypot(p[0]-(a[0]+t*dx), p[1]-(a[1]+t*dy));
+  }
+  function rdp(pts, s, e, tol, out) {
+    let maxD = 0, idx = s;
+    for (let i = s+1; i < e; i++) {
+      const d = perpDist(pts[i], pts[s], pts[e]);
+      if (d > maxD) { maxD = d; idx = i; }
+    }
+    if (maxD > tol) { rdp(pts, s, idx, tol, out); out.push(pts[idx]); rdp(pts, idx, e, tol, out); }
+  }
+  const out = [points[0]];
+  rdp(points, 0, points.length-1, tolerance, out);
+  out.push(points[points.length-1]);
+  return out;
+}
+
+// Simplify to ≤targetMax meaningful waypoints using RDP + uniform fallback
+function simplifyGPXForTrail(latlngs, targetMax = 20) {
+  if (latlngs.length <= targetMax) return latlngs.slice();
+  let tol = 0.0001, simplified = latlngs;
+  while (simplified.length > targetMax && tol < 1) {
+    tol *= 2;
+    simplified = rdpSimplify(latlngs, tol);
+  }
+  if (simplified.length > targetMax) {
+    const step = (simplified.length - 1) / (targetMax - 1);
+    simplified = Array.from({ length: targetMax }, (_, i) => simplified[Math.round(i * step)]);
+  }
+  return simplified;
+}
+
+let gpxLayer = null;
+let gpxRawPoints = [];
 let gpxFileName = '';
 
-document.getElementById('gpx-load-btn').addEventListener('click', () => {
-  document.getElementById('gpx-file-input').click();
-});
-
+// GPX file input change handler
 document.getElementById('gpx-file-input').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
-    loadGPXString(ev.target.result, file.name);
-    e.target.value = '';
-  };
+  reader.onload = ev => { loadGPXString(ev.target.result, file.name); e.target.value = ''; };
   reader.readAsText(file);
 });
 
@@ -2431,131 +3026,89 @@ function loadGPXString(text, name) {
   const doc = parser.parseFromString(text, 'application/xml');
   const trkpts = Array.from(doc.querySelectorAll('trkpt,rtept,wpt'));
   if (trkpts.length === 0) { toast('No track points found in GPX'); return; }
-
   const latlngs = trkpts.map(pt => [
     parseFloat(pt.getAttribute('lat')),
     parseFloat(pt.getAttribute('lon'))
   ]).filter(([a, b]) => !isNaN(a) && !isNaN(b));
-
   if (latlngs.length === 0) { toast('Invalid coordinates in GPX'); return; }
-
   removeGPXPreview();
   gpxRawPoints = latlngs;
   gpxFileName = name;
-
-  // Draw dashed preview polyline
-  gpxLayer = L.polyline(latlngs, {
-    color: '#7c3aed', weight: 4, opacity: 0.75, dashArray: '8,5'
-  }).addTo(map);
-
+  // Simplify on load for preview — keeps the display fast while preserving original for export
+  const simplified = simplifyGPXForTrail(latlngs, 20);
+  gpxLayer = L.polyline(latlngs, { color: '#7c3aed', weight: 4, opacity: 0.75, dashArray: '8,5' }).addTo(map);
   map.fitBounds(gpxLayer.getBounds(), { padding: [32, 32], animate: true });
-
-  // Show info bar
   document.getElementById('gpx-info-name').textContent = name.replace(/\.gpx$/i, '');
-  document.getElementById('gpx-info-meta').textContent = latlngs.length + ' track points — click Edit to make editable';
+  document.getElementById('gpx-info-meta').textContent =
+    latlngs.length + ' pts → ' + simplified.length + ' editable waypoints — click Edit to open in planner';
   const bar = document.getElementById('gpx-info-bar');
   bar.style.display = 'flex';
   requestAnimationFrame(() => requestAnimationFrame(() => bar.classList.add('show')));
-
   toast('GPX loaded: ' + latlngs.length + ' pts');
 }
 
 function removeGPXPreview() {
   if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
-  gpxRawPoints = [];
-  gpxFileName = '';
+  gpxRawPoints = []; gpxFileName = '';
   const bar = document.getElementById('gpx-info-bar');
   bar.classList.remove('show');
   setTimeout(() => { if (!bar.classList.contains('show')) bar.style.display = 'none'; }, 350);
 }
 
-// Remove button
-document.getElementById('gpx-remove-btn').addEventListener('click', () => {
-  removeGPXPreview();
-  toast('GPX removed');
-});
+document.getElementById('gpx-remove-btn').addEventListener('click', () => { removeGPXPreview(); toast('GPX removed'); });
 
-// Edit button — downsample to ≤30 waypoints and load into trail planner
+// Edit — RDP-simplify then load as editable trail
 document.getElementById('gpx-edit-btn').addEventListener('click', () => {
   if (gpxRawPoints.length === 0) return;
-
-  const MAX_WP = 30;
-  let sampled;
-  if (gpxRawPoints.length <= MAX_WP) {
-    sampled = gpxRawPoints.slice();
-  } else {
-    sampled = [];
-    const step = (gpxRawPoints.length - 1) / (MAX_WP - 1);
-    for (let i = 0; i < MAX_WP; i++) {
-      sampled.push(gpxRawPoints[Math.round(i * step)]);
-    }
-  }
-
-  // Remove preview and clear any existing trail
+  const sampled = simplifyGPXForTrail(gpxRawPoints, 20);
+  const routeName = gpxFileName.replace(/\.gpx$/i, '');
   removeGPXPreview();
   clearTrailRoute();
   openTrailPanel();
-
-  // Feed each sampled point through the trail click handler sequentially
+  document.getElementById('trail-name-input').value = routeName;
   (async () => {
-    toast('Building ' + sampled.length + '-point editable route...', 5000);
+    toast('Building ' + sampled.length + '-point route…', 5000);
     for (let i = 0; i < sampled.length; i++) {
       await handleTrailClick({ lat: sampled[i][0], lng: sampled[i][1] });
       if (i < sampled.length - 1) await new Promise(r => setTimeout(r, 100));
     }
-    toast('GPX route editable — drag waypoints to adjust');
+    toast('GPX loaded as editable route — drag waypoints to adjust');
   })();
 });
 
-function saveGPX(mode) {
+function saveGPX(mode, routeName) {
   let coordPairs = [];
-
   if (mode === 'trail' && trailState.segments.length > 0) {
     trailState.segments.forEach(seg => {
-      if (seg.routingCtrl && seg.routingCtrl._routes && seg.routingCtrl._routes[0]) {
-        const coords = seg.routingCtrl._routes[0].coordinates || [];
-        coords.forEach(ll => coordPairs.push([ll.lat, ll.lng]));
-      }
-    });
-    if (coordPairs.length === 0) {
-      trailState.waypoints.forEach(wp => coordPairs.push(wp.latlng));
-    }
-  } else if (mode === 'route' && routingControl) {
-    if (routingControl._routes && routingControl._routes[0]) {
-      const coords = routingControl._routes[0].coordinates || [];
+      const coords = seg.routingCtrl?._routes?.[0]?.coordinates || [];
       coords.forEach(ll => coordPairs.push([ll.lat, ll.lng]));
-    }
+    });
+    if (coordPairs.length === 0) trailState.waypoints.forEach(wp => coordPairs.push(wp.latlng));
+  } else if (mode === 'route' && routingControl) {
+    const coords = routingControl._routes?.[0]?.coordinates || [];
+    coords.forEach(ll => coordPairs.push([ll.lat, ll.lng]));
   }
-
   if (coordPairs.length === 0) { toast('No route data to export'); return; }
-
+  const name = routeName || document.getElementById('trail-name-input').value.trim() || 'Wayfind Route';
   const now = new Date().toISOString();
   const trkpts = coordPairs.map(([lat, lng]) =>
-    `      <trkpt lat="${lat.toFixed(6)}" lon="${lng.toFixed(6)}"><time>${now}</time></trkpt>`
+    '      <trkpt lat="' + lat.toFixed(6) + '" lon="' + lng.toFixed(6) + '"><time>' + now + '</time></trkpt>'
   ).join('\n');
-
-  const gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="Wayfind" xmlns="http://www.topografix.com/GPX/1/1">
-  <metadata><time>${now}</time></metadata>
-  <trk>
-    <name>Wayfind Route</name>
-    <trkseg>
-${trkpts}
-    </trkseg>
-  </trk>
-</gpx>`;
-
+  const gpxContent = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<gpx version="1.1" creator="Wayfind" xmlns="http://www.topografix.com/GPX/1/1">\n' +
+    '  <metadata><n>' + escHtml(name) + '</n><time>' + now + '</time></metadata>\n' +
+    '  <trk><n>' + escHtml(name) + '</n><trkseg>\n' + trkpts + '\n  </trkseg></trk>\n</gpx>';
   const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `wayfind-route-${Date.now()}.gpx`;
+  a.download = (name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'route') + '.gpx';
   a.click();
   URL.revokeObjectURL(url);
   toast('GPX saved ✓');
 }
 
-// ════════════════════════════════════════════════════════════
+
 // MAP CLICK — unified handler
 // ════════════════════════════════════════════════════════════
 
@@ -2565,10 +3118,30 @@ map.on('click', async e => {
     return;
   }
 
-  // Don't drop pins while route panel is open or summary cards are visible
   const routePanelOpen = document.getElementById('route-panel').classList.contains('open');
   const routeSummaryVisible = document.getElementById('route-summary-card').classList.contains('show');
   const trailSummaryVisible = document.getElementById('trail-summary-card').classList.contains('show');
+
+  // If route panel is open and an input is focused, clicking map sets that point
+  if (routePanelOpen && activeRouteField) {
+    const { lat, lng } = e.latlng;
+    const inputEl = activeRouteField === 'from' ? fromInput : toInput;
+    // Only use if field is empty or has placeholder text (no meaningful text typed)
+    if (!inputEl.value.trim()) {
+      const label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      setRoutePoint(activeRouteField, [lat, lng], label);
+      toast(`📍 Set as ${activeRouteField === 'from' ? 'start' : 'end'}`);
+      nominatimReverse(lat, lng).then(r => {
+        if (r) {
+          const name = r.name || (r.display_name || '').split(',')[0].trim() || label;
+          setRoutePoint(activeRouteField, [lat, lng], name);
+        }
+      }).catch(() => {});
+    }
+    return;
+  }
+
+  // Don't drop pins while route panel is open or summary cards are visible
   if (routePanelOpen || routeSummaryVisible || trailSummaryVisible) return;
 
   const { lat, lng } = e.latlng;
@@ -2586,8 +3159,8 @@ map.on('click', async e => {
       tags = data.extratags || {};
     }
 
-    // Limit to 2 dropped pins — remove oldest if needed
-    if (droppedPinIds.length >= 2) {
+    // Limit to 1 dropped pin — remove previous if needed
+    if (droppedPinIds.length >= 1) {
       removeMarker(droppedPinIds.shift());
     }
 
@@ -2670,11 +3243,12 @@ async function doExport() {
   try {
     const mapEl = document.getElementById('map');
     const rect = mapEl.getBoundingClientRect();
+    const scale = 2;
 
     const canvas = await html2canvas(mapEl, {
       useCORS: true, allowTaint: true,
       width: rect.width, height: rect.height,
-      scale: 2, logging: false, backgroundColor: '#f5f6fa'
+      scale, logging: false, backgroundColor: '#f5f6fa'
     });
 
     const final = document.createElement('canvas');
@@ -2682,6 +3256,47 @@ async function doExport() {
     final.height = canvas.height;
     const ctx = final.getContext('2d');
     ctx.drawImage(canvas, 0, 0);
+
+    // ── Draw route polylines manually (html2canvas misses SVG layers) ──
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap  = 'round';
+
+    function drawLatLngs(coords, color, weight, dashArr) {
+      if (!coords || coords.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = weight * scale;
+      if (dashArr) ctx.setLineDash(dashArr.map(d => d * scale));
+      else ctx.setLineDash([]);
+      coords.forEach((ll, i) => {
+        const pt = map.latLngToContainerPoint(ll);
+        i === 0 ? ctx.moveTo(pt.x * scale, pt.y * scale) : ctx.lineTo(pt.x * scale, pt.y * scale);
+      });
+      ctx.stroke();
+    }
+
+    // Directions route
+    if (routingControl?._routes?.[0]) {
+      drawLatLngs(routingControl._routes[0].coordinates, 'rgba(147,197,253,0.5)', 8);
+      drawLatLngs(routingControl._routes[0].coordinates, '#2563eb', 5);
+    }
+
+    // Trail segments
+    trailState.segments.forEach(seg => {
+      const coords = seg.routingCtrl?._routes?.[0]?.coordinates;
+      if (coords) {
+        drawLatLngs(coords, 'rgba(134,239,172,0.4)', 7);
+        drawLatLngs(coords, '#16a34a', 4);
+      }
+    });
+
+    // GPX preview
+    if (gpxRawPoints.length > 1) {
+      drawLatLngs(gpxRawPoints.map(([lat,lng]) => L.latLng(lat,lng)), '#7c3aed', 3, [8, 5]);
+    }
+
+    ctx.restore();
 
     // Attribution bar
     const wh = final.height, ww = final.width;
@@ -2708,6 +3323,262 @@ async function doExport() {
 }
 
 // ════════════════════════════════════════════════════════════
+// ROUTE LIBRARY  (localStorage — multi-slot named routes)
+// ════════════════════════════════════════════════════════════
+
+const WF_ROUTES_KEY = 'wf_routes_v2';   // array of saved routes
+const WF_DRAFT_KEY  = 'wf_trail_draft'; // single auto-draft slot
+
+// Default name: "Route — 20 Feb 2026"
+function defaultRouteName() {
+  return 'Route \u2014 ' + new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// ─── Storage helpers ───
+
+function getLibrary() {
+  try { return JSON.parse(localStorage.getItem(WF_ROUTES_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function setLibrary(arr) {
+  try { localStorage.setItem(WF_ROUTES_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+function saveRouteToLibrary(name) {
+  if (trailState.waypoints.length < 2) { toast('Need at least 2 waypoints to save'); return; }
+  const lib = getLibrary();
+  const entry = {
+    id: 'r_' + Date.now(),
+    name: name || defaultRouteName(),
+    profile: trailState.profile,
+    date: new Date().toISOString(),
+    dist: trailState.totalDist,
+    time: trailState.totalTime,
+    waypoints: trailState.waypoints.map(w => ({ latlng: w.latlng, name: w.name }))
+  };
+  lib.unshift(entry); // newest first
+  if (lib.length > 30) lib.splice(30); // cap at 30
+  setLibrary(lib);
+  toast(`📚 "${entry.name}" saved to library`);
+}
+
+function deleteRouteFromLibrary(id) {
+  setLibrary(getLibrary().filter(r => r.id !== id));
+}
+
+// Draft auto-save (overwrites single slot)
+function saveDraft() {
+  if (trailState.waypoints.length < 2) return;
+  try {
+    localStorage.setItem(WF_DRAFT_KEY, JSON.stringify({
+      name: document.getElementById('trail-name-input').value.trim(),
+      profile: trailState.profile,
+      waypoints: trailState.waypoints.map(w => ({ latlng: w.latlng, name: w.name }))
+    }));
+  } catch(e) {}
+}
+
+function getDraft() {
+  try { return JSON.parse(localStorage.getItem(WF_DRAFT_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(WF_DRAFT_KEY); } catch(e) {}
+}
+
+// ─── Restore a saved route (from library or draft) ───
+async function restoreRouteData(data) {
+  clearTrailRouteNoToast();
+  openTrailPanel();
+  trailState.profile = data.profile || 'foot';
+  document.querySelectorAll('.trail-transport-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tprofile === trailState.profile)
+  );
+  if (data.name) document.getElementById('trail-name-input').value = data.name;
+  // Mark as saved if loaded from library (not a draft)
+  if (!data.isDraft) trailState._saved = true;
+  toast('Restoring route…', 5000);
+  for (let i = 0; i < data.waypoints.length; i++) {
+    const wp = data.waypoints[i];
+    await handleTrailClick({ lat: wp.latlng[0], lng: wp.latlng[1] });
+    if (i < data.waypoints.length - 1) await new Promise(r => setTimeout(r, 80));
+  }
+  toast('Route loaded ✓');
+}
+
+// ─── Save Route Modal ───
+function openSaveModal() {
+  if (trailState.waypoints.length < 2) { toast('Plan a route first'); return; }
+  const nameInput = document.getElementById('save-route-name');
+  nameInput.value = document.getElementById('trail-name-input').value.trim() || defaultRouteName();
+  document.getElementById('save-route-modal').classList.add('show');
+  setTimeout(() => nameInput.focus(), 50);
+}
+
+document.getElementById('save-route-cancel-btn').addEventListener('click', () => {
+  document.getElementById('save-route-modal').classList.remove('show');
+});
+document.getElementById('save-route-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('save-route-modal'))
+    document.getElementById('save-route-modal').classList.remove('show');
+});
+
+document.getElementById('save-to-library-btn').addEventListener('click', () => {
+  const name = document.getElementById('save-route-name').value.trim() || defaultRouteName();
+  // Sync name back to trail input
+  document.getElementById('trail-name-input').value = name;
+  trailState._saved = true;
+  saveRouteToLibrary(name);
+  clearDraft();
+  document.getElementById('save-route-modal').classList.remove('show');
+});
+
+document.getElementById('save-as-gpx-btn').addEventListener('click', () => {
+  const name = document.getElementById('save-route-name').value.trim() || 'wayfind-route';
+  document.getElementById('trail-name-input').value = name;
+  trailState._saved = true;
+  document.getElementById('save-route-modal').classList.remove('show');
+  saveGPX('trail', name);
+});
+
+// ─── Routes Library Panel ───
+function openRoutesPanel() {
+  renderRoutesPanel();
+  document.getElementById('routes-panel').classList.add('open');
+}
+function closeRoutesPanel() {
+  document.getElementById('routes-panel').classList.remove('open');
+}
+
+document.getElementById('routes-panel-close').addEventListener('click', closeRoutesPanel);
+
+document.getElementById('trail-library-btn').addEventListener('click', openRoutesPanel);
+
+// Search bar routes button
+document.getElementById('search-routes-btn').addEventListener('click', openRoutesPanel);
+
+// Routes panel GPX load button
+document.getElementById('routes-panel-gpx-btn').addEventListener('click', () => {
+  closeRoutesPanel();
+  document.getElementById('gpx-file-input').click();
+});
+
+function renderRoutesPanel() {
+  const lib = getLibrary();
+  const draft = getDraft();
+  const container = document.getElementById('routes-list');
+  container.innerHTML = '';
+
+  const allItems = [];
+  if (draft && draft.waypoints?.length >= 2) {
+    allItems.push({ ...draft, id: '__draft__', isDraft: true });
+  }
+  allItems.push(...lib);
+
+  if (allItems.length === 0) {
+    container.innerHTML = `
+      <div id="routes-empty">
+        <div class="re-icon">🗺️</div>
+        <p>No saved routes yet.<br>Plan a route and tap <strong>💾 Save</strong> to add it here.</p>
+      </div>`;
+    return;
+  }
+
+  allItems.forEach(route => {
+    const date = route.isDraft ? 'Unsaved draft' :
+      new Date(route.date).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+    const distStr = route.dist ? fmtDist(route.dist) : '—';
+    const timeStr = route.time ? fmtTime(route.time) : '—';
+    const ptStr   = route.waypoints?.length ?? 0;
+    const profileIcon = { foot:'🚶', bike:'🚲', car:'🚗' }[route.profile] || '🥾';
+
+    const item = document.createElement('div');
+    item.className = 'route-library-item';
+    item.innerHTML = `
+      <div class="rli-top">
+        <div class="rli-icon">${route.isDraft ? '📝' : profileIcon}</div>
+        <div class="rli-info">
+          <div class="rli-name">${escHtml(route.name)}${route.isDraft ? ' <span style="font-size:10px;color:var(--orange);font-weight:700;background:var(--orange-light);padding:1px 6px;border-radius:var(--radius-full)">DRAFT</span>' : ''}</div>
+          <div class="rli-date">${date}</div>
+        </div>
+      </div>
+      <div class="rli-stats">
+        <div class="rli-stat">📏 <span>${distStr}</span></div>
+        <div class="rli-stat">⏱ <span>${timeStr}</span></div>
+        <div class="rli-stat">📍 <span>${ptStr} pts</span></div>
+      </div>
+      <div class="rli-actions">
+        <button class="rli-btn load-btn">▶ Load</button>
+        ${!route.isDraft ? `<button class="rli-btn export export-btn">⬇ GPX</button>` : ''}
+        <button class="rli-btn danger delete-btn">${route.isDraft ? '✕ Clear' : '✕ Delete'}</button>
+      </div>`;
+
+    item.querySelector('.load-btn').addEventListener('click', async () => {
+      closeRoutesPanel();
+      await restoreRouteData(route);
+    });
+
+    const exportBtn = item.querySelector('.export-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        // Build a temporary trail from saved waypoints coords for GPX export
+        exportLibraryRouteGPX(route);
+      });
+    }
+
+    item.querySelector('.delete-btn').addEventListener('click', () => {
+      if (route.isDraft) {
+        clearDraft();
+      } else {
+        deleteRouteFromLibrary(route.id);
+      }
+      renderRoutesPanel();
+      toast(route.isDraft ? 'Draft cleared' : 'Route deleted');
+    });
+
+    container.appendChild(item);
+  });
+}
+
+function exportLibraryRouteGPX(route) {
+  const coordPairs = route.waypoints.map(w => w.latlng);
+  if (coordPairs.length === 0) { toast('No route data'); return; }
+  const now = new Date().toISOString();
+  const trkpts = coordPairs.map(([lat, lng]) =>
+    `      <trkpt lat="${lat.toFixed(6)}" lon="${lng.toFixed(6)}"><time>${now}</time></trkpt>`
+  ).join('\n');
+  const gpxContent = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Wayfind" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>${escHtml(route.name)}</name><time>${now}</time></metadata>
+  <trk>
+    <name>${escHtml(route.name)}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+  const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (route.name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'route') + '.gpx';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('GPX exported ✓');
+}
+
+// Wire up trail summary card buttons for save/library
+document.getElementById('trail-card-save-btn').addEventListener('click', openSaveModal);
+document.getElementById('trail-card-library-btn').addEventListener('click', () => {
+  document.getElementById('trail-summary-card').classList.remove('show');
+  openRoutesPanel();
+});
+
+// Also keep old trail-card-gpx-btn reference in case anything still points to it
+// (the HTML was replaced above, so this is a no-op guard)
+
+// ════════════════════════════════════════════════════════════
 // LOADER
 // ════════════════════════════════════════════════════════════
 
@@ -2722,12 +3593,28 @@ window.addEventListener('load', () => {
 
 setTimeout(() => map.invalidateSize(), 300);
 
-// Initial hint
+// Initial hint — offer to restore draft if one exists
 setTimeout(() => {
-  const h = document.getElementById('mode-hint');
-  h.textContent = '💡 Click anywhere to drop a pin · Use Directions or Plan Route for navigation';
-  h.classList.add('show');
-  setTimeout(() => h.classList.remove('show'), 4500);
+  const draft = getDraft();
+  if (draft && draft.waypoints?.length >= 2) {
+    const h = document.getElementById('mode-hint');
+    h.innerHTML = `📝 Unsaved draft (${draft.waypoints.length} pts) — <span id="restore-yes" style="text-decoration:underline;cursor:pointer;font-weight:700">Restore</span> · <span id="restore-no" style="text-decoration:underline;cursor:pointer;opacity:0.7">Dismiss</span>`;
+    h.classList.add('show');
+    h.style.pointerEvents = 'all';
+    document.getElementById('restore-yes')?.addEventListener('click', () => {
+      h.classList.remove('show'); h.style.pointerEvents = '';
+      restoreRouteData(draft);
+    });
+    document.getElementById('restore-no')?.addEventListener('click', () => {
+      h.classList.remove('show'); h.style.pointerEvents = '';
+      clearDraft();
+    });
+  } else {
+    const h = document.getElementById('mode-hint');
+    h.textContent = '💡 Click anywhere to drop a pin · Use Directions or Plan Route for navigation';
+    h.classList.add('show');
+    setTimeout(() => h.classList.remove('show'), 4500);
+  }
 }, 1800);
 </script>
 </body>
