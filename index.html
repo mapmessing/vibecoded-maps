@@ -3807,81 +3807,47 @@ function closeElevationPanel() {
 
 document.getElementById('elev-panel-close').addEventListener('click', closeElevationPanel);
 
-async function buildElevationProfile() {
-  // 1. Extract full routed path from all trail segments
-  const rawPath = [];
-  trailState.segments.forEach(seg => {
-    const coords = seg.routingCtrl?._routes?.[0]?.coordinates || [];
-    coords.forEach(c => rawPath.push([c.lat, c.lng]));
-  });
-  if (rawPath.length < 2) return;
+async function buildElevationProfile(route) {
+  const loading = document.getElementById('elev-loading');
+  const stats = document.getElementById('elev-panel-stats');
+  loading.style.display = 'flex';
+  loading.innerHTML = '<div class="elev-spin"></div>';
 
-  // 2. Uniform sample to ≤80 points for elevation API
-  const MAX_SAMPLES = 80;
-  const step = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
-  const sampled = [];
-  for (let i = 0; i < rawPath.length; i += step) sampled.push(rawPath[i]);
-  if (sampled[sampled.length - 1] !== rawPath[rawPath.length - 1]) sampled.push(rawPath[rawPath.length - 1]);
+  try {
+    const raw = (route.path && route.path.length >= 2) ? route.path : route.waypoints.map(w => w.latlng);
+    let totalD = 0;
+    let sampled = [{ lat: raw[0][0] || raw[0].lat, lng: raw[0][1] || raw[0].lng, dist: 0 }];
 
-  // 3. Compute cumulative distances
-  let cumDist = 0;
-  const sampledPts = sampled.map((p, i) => {
-    if (i > 0) cumDist += haversineM(sampled[i-1][0], sampled[i-1][1], p[0], p[1]);
-    return { lat: p[0], lng: p[1], dist: cumDist };
-  });
+    for (let i = 1; i < raw.length; i++) {
+      const p1 = raw[i-1], p2 = raw[i];
+      const lat1 = p1[0]||p1.lat, lng1 = p1[1]||p1.lng, lat2 = p2[0]||p2.lat, lng2 = p2[1]||p2.lng;
+      totalD += haversineM(lat1, lng1, lat2, lng2);
+      if (i % Math.max(1, Math.floor(raw.length/100)) === 0 || i === raw.length-1) {
+        sampled.push({ lat: lat2, lng: lng2, dist: totalD });
+      }
+    }
 
-  // 4. Show panel in loading state
-  const panel = document.getElementById('elev-panel');
-  document.getElementById('elev-loading').innerHTML = '<div class="elev-spin"></div> Loading elevation data…';
-  document.getElementById('elev-loading').style.display = 'flex';
-  document.getElementById('elev-panel-stats').textContent = '—';
-  panel.classList.add('show');
-  document.body.classList.add('has-elev-panel');
+    const lats = sampled.map(p => p.lat.toFixed(5)).join(',');
+    const lngs = sampled.map(p => p.lng.toFixed(5)).join(',');
+    const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`);
+    const data = await res.json();
 
-try {
-    // 5. Fetch elevation data using the highly reliable Open-Meteo API
-    const lats = sampledPts.map(p => p.lat.toFixed(5)).join(',');
-    const lngs = sampledPts.map(p => p.lng.toFixed(5)).join(',');
+    sampled.forEach((p, i) => p.ele = data.elevation[i] || 0);
+    elevState.points = sampled;
+    elevState.totalDist = totalD;
     
-    const resp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    
-    const data = await resp.json();
-
-    if (!data.elevation || data.elevation.length === 0) throw new Error('No elevation results');
-
-    // Map the returned elevation numbers back to our points
-    data.elevation.forEach((ele, i) => { 
-      if (i < sampledPts.length) sampledPts[i].ele = ele ?? 0; 
-    });
-
-    elevState.points = sampledPts.filter(p => typeof p.ele === 'number');
-    elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
-
-    const eles = elevState.points.map(p => p.ele);
+    const eles = sampled.map(p => p.ele);
     elevState.minEle = Math.min(...eles);
     elevState.maxEle = Math.max(...eles);
 
-    // Compute elevation gain
-    let gain = 0;
-    for (let i = 1; i < elevState.points.length; i++) {
-      const d = elevState.points[i].ele - elevState.points[i-1].ele;
-      if (d > 0) gain += d;
-    }
-    elevState.gain = Math.round(gain);
-
-    document.getElementById('elev-loading').style.display = 'none';
-    const rangeM = Math.round(elevState.maxEle - elevState.minEle);
-    document.getElementById('elev-panel-stats').textContent =
-      `↑ ${elevState.gain}m gain · ${rangeM}m range · ${Math.round(elevState.minEle)}–${Math.round(elevState.maxEle)}m`;
-
-    // Small delay to ensure layout is ready, then draw
-    requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
-
-  } catch(err) {
-    document.getElementById('elev-loading').innerHTML = '⚠ Elevation data unavailable';
-    document.getElementById('elev-loading').style.display = 'flex';
-    console.warn('Elevation fetch error:', err);
+    loading.style.display = 'none'; // CRITICAL: This breaks the loop
+    stats.textContent = `↑ ${Math.round(elevState.maxEle - elevState.minEle)}m range · ${(totalD/1000).toFixed(2)} km`;
+    
+    drawElevationChart();
+    setupElevationScrubber();
+  } catch(e) {
+    loading.innerHTML = '⚠ Elevation Unavailable';
+    console.error(e);
   }
 }
 
@@ -3980,49 +3946,37 @@ let elevScrubActive = false;
 
 function setupElevationScrubber() {
   const canvas = document.getElementById('elev-canvas');
-  const scrubber = document.getElementById('elev-scrubber');
-  const tooltip = document.getElementById('elev-tooltip');
-  if (!canvas || !scrubber || !elevState.points.length) return;
+  if (!canvas) return;
 
   canvas.onmousemove = (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const frac = Math.max(0, Math.min(1, x / rect.width));
     
-    // Find the point closest to the mouse position
     const targetDist = frac * elevState.totalDist;
     const pts = elevState.points;
     const nearIdx = pts.reduce((best, p, i) => 
       Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
     
     const pt = pts[nearIdx];
-    
-    // Move the vertical line
+    const scrubber = document.getElementById('elev-scrubber');
+    const tooltip = document.getElementById('elev-tooltip');
+
     scrubber.style.left = (frac * 100) + '%';
     scrubber.style.display = 'block';
-
-    // Move and update tooltip
-    tooltip.style.display = 'block';
-    tooltip.style.left = x + 'px';
-    tooltip.innerHTML = `<strong>${Math.round(pt.ele)}m</strong><br>${(pt.dist / 1000).toFixed(2)} km`;
     
-    // Move the map circle to match
-    if (window.scrubMarker) {
-      window.scrubMarker.setLatLng([pt.lat, pt.lng]);
-    } else {
-      window.scrubMarker = L.circleMarker([pt.lat, pt.lng], {
-        radius: 6, color: '#2563eb', fillOpacity: 1, weight: 2, fillColor: '#fff'
-      }).addTo(map);
-    }
+    tooltip.style.left = x + 'px';
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = `<strong>${Math.round(pt.ele)}m</strong><br>${(pt.dist / 1000).toFixed(2)} km`;
+
+    if (window.scrubMarker) window.scrubMarker.setLatLng([pt.lat, pt.lng]);
+    else window.scrubMarker = L.circleMarker([pt.lat, pt.lng], {radius:6, color:'#2563eb', fillColor:'#fff', fillOpacity:1}).addTo(map);
   };
 
   canvas.onmouseleave = () => {
-    scrubber.style.display = 'none';
-    tooltip.style.display = 'none';
-    if (window.scrubMarker) {
-      map.removeLayer(window.scrubMarker);
-      window.scrubMarker = null;
-    }
+    document.getElementById('elev-scrubber').style.display = 'none';
+    document.getElementById('elev-tooltip').style.display = 'none';
+    if (window.scrubMarker) { map.removeLayer(window.scrubMarker); window.scrubMarker = null; }
   };
 }
 
