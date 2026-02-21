@@ -3980,8 +3980,51 @@ let elevScrubActive = false;
 
 function setupElevationScrubber() {
   const canvas = document.getElementById('elev-canvas');
+  const scrubber = document.getElementById('elev-scrubber');
   const tooltip = document.getElementById('elev-tooltip');
-  let animFrame = null;
+  if (!canvas || !scrubber || !elevState.points.length) return;
+
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const frac = Math.max(0, Math.min(1, x / rect.width));
+    
+    // Find the point closest to the mouse position
+    const targetDist = frac * elevState.totalDist;
+    const pts = elevState.points;
+    const nearIdx = pts.reduce((best, p, i) => 
+      Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
+    
+    const pt = pts[nearIdx];
+    
+    // Move the vertical line
+    scrubber.style.left = (frac * 100) + '%';
+    scrubber.style.display = 'block';
+
+    // Move and update tooltip
+    tooltip.style.display = 'block';
+    tooltip.style.left = x + 'px';
+    tooltip.innerHTML = `<strong>${Math.round(pt.ele)}m</strong><br>${(pt.dist / 1000).toFixed(2)} km`;
+    
+    // Move the map circle to match
+    if (window.scrubMarker) {
+      window.scrubMarker.setLatLng([pt.lat, pt.lng]);
+    } else {
+      window.scrubMarker = L.circleMarker([pt.lat, pt.lng], {
+        radius: 6, color: '#2563eb', fillOpacity: 1, weight: 2, fillColor: '#fff'
+      }).addTo(map);
+    }
+  };
+
+  canvas.onmouseleave = () => {
+    scrubber.style.display = 'none';
+    tooltip.style.display = 'none';
+    if (window.scrubMarker) {
+      map.removeLayer(window.scrubMarker);
+      window.scrubMarker = null;
+    }
+  };
+}
 
   function getScrubFrac(clientX) {
     const rect = canvas.getBoundingClientRect();
