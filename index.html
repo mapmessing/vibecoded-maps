@@ -1003,7 +1003,8 @@ body.trail-mode #map { cursor: crosshair; }
 
 /* ─── ROUTES LIBRARY PANEL ─── */
 #routes-panel {
-  position: fixed; right: -400px; top: 16px; bottom: 80px;
+  position: fixed; right: -400px; top: 16px;
+  max-height: calc(100dvh - 96px);
   width: min(380px, calc(100vw - 32px));
   z-index: 950; background: var(--white);
   border-radius: var(--radius-xl); box-shadow: var(--shadow-xl);
@@ -1065,6 +1066,82 @@ body.trail-mode #map { cursor: crosshair; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ─── ELEVATION PROFILE PANEL ─── */
+#elev-panel {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0; pointer-events: none; z-index: 898;
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl); border: 1.5px solid var(--trail);
+  width: min(600px, calc(100vw - 32px));
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+#elev-panel.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+/* Push the trail summary card up when elev panel is visible */
+body.has-elev-panel #trail-summary-card { bottom: 166px; }
+
+/* Single unified chart area — no header row */
+#elev-chart-wrap {
+  position: relative; height: 72px; overflow: hidden;
+  border-radius: calc(var(--radius-lg) - 1px);
+  cursor: crosshair;
+}
+#elev-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block;
+}
+#elev-tooltip {
+  position: absolute; top: 4px;
+  background: rgba(17,24,39,0.82); color: white;
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: var(--radius-full);
+  pointer-events: none; display: none; transform: translateX(-50%);
+  white-space: nowrap; box-shadow: var(--shadow-sm);
+}
+#elev-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--text-muted); gap: 6px; font-weight: 500;
+  background: var(--white); border-radius: calc(var(--radius-lg) - 1px);
+}
+.elev-spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--trail); border-radius: 50%; animation: spin 0.8s linear infinite; }
+#elev-panel-close {
+  position: absolute; top: 5px; right: 6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(255,255,255,0.85); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 11px; z-index: 2;
+  transition: background var(--tr), color var(--tr);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  line-height: 1;
+}
+#elev-panel-close:hover { background: var(--red-light); color: var(--red); }
+
+/* ─── ROUTES SEARCH ─── */
+#routes-search-wrap {
+  padding: 7px 8px 0;
+  flex-shrink: 0;
+}
+#routes-search-input {
+  width: 100%; border: 1.5px solid var(--border);
+  border-radius: var(--radius-full); padding: 7px 12px 7px 32px;
+  font-family: var(--font); font-size: 13px; color: var(--text-primary);
+  background: var(--bg); outline: none; transition: border-color var(--tr);
+}
+#routes-search-input:focus { border-color: var(--trail); background: var(--white); }
+#routes-search-input::placeholder { color: var(--text-muted); }
+#routes-search-wrap { position: relative; padding: 7px 8px 0; }
+.rss-icon {
+  position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); pointer-events: none; display: flex;
+}
+
+/* Mobile adjustments for elev panel */
+@media (max-width: 768px) {
+  #elev-panel { bottom: 72px; width: calc(100vw - 24px); left: 12px; transform: translateX(0) translateY(20px); }
+  #elev-panel.show { transform: translateX(0) translateY(0); }
+  body.has-elev-panel #trail-summary-card { bottom: 160px; }
+}
 
 /* ════════════════════════════════════════════════════════════
    MOBILE UI  (≤768px)
@@ -1490,6 +1567,10 @@ body.trail-mode #map { cursor: crosshair; }
     </button>
     <button id="routes-panel-close">✕</button>
   </div>
+  <div id="routes-search-wrap">
+    <svg class="rss-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" id="routes-search-input" placeholder="Search saved routes…" autocomplete="off" spellcheck="false"/>
+  </div>
   <div id="routes-list"></div>
 </div>
 
@@ -1533,6 +1614,16 @@ body.trail-mode #map { cursor: crosshair; }
     </svg>
     Routes
   </button>
+</div>
+
+<!-- Elevation Profile Panel -->
+<div id="elev-panel">
+  <button id="elev-panel-close" title="Close">✕</button>
+  <div id="elev-chart-wrap">
+    <canvas id="elev-canvas"></canvas>
+    <div id="elev-tooltip"></div>
+    <div id="elev-loading"><div class="elev-spin"></div> Loading elevation…</div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -2322,6 +2413,25 @@ function dedupeSteps(steps) {
   return out;
 }
 
+// Build trail navigation steps: removes DestinationReached/WaypointReached from
+// intermediate segments so "You have arrived" only fires at the true final waypoint.
+function buildTrailNavSteps() {
+  const allSteps = [];
+  trailState.segments.forEach((seg, si) => {
+    const isLastSeg = si === trailState.segments.length - 1;
+    const steps = seg.steps || [];
+    steps.forEach((step, sj) => {
+      // For non-final segments, drop the last step if it's a terminal type
+      if (!isLastSeg && sj === steps.length - 1) {
+        const t = step.type || '';
+        if (t.includes('DestinationReached') || t.includes('WaypointReached')) return;
+      }
+      allSteps.push(step);
+    });
+  });
+  return dedupeSteps(allSteps);
+}
+
 function showInstructionsPanel(steps) {
   if (!steps || steps.length === 0) { toast('No turn-by-turn data available'); return; }
   const list = document.getElementById('instr-list');
@@ -2919,6 +3029,7 @@ function clearTrailRouteInternal() {
   document.getElementById('instructions-panel').classList.remove('open');
   setWpListOpen(false);
   updateTrailUI();
+  closeElevationPanel();
 }
 
 function clearTrailRouteNoToast() {
@@ -2942,6 +3053,21 @@ document.getElementById('trail-finish-btn').addEventListener('click', () => {
   hideHint();
   saveDraft();
   toast('Route complete! 🥾');
+
+  // Fit map to show the whole route
+  try {
+    const allCoords = trailState.segments.flatMap(seg =>
+      seg.routingCtrl?._routes?.[0]?.coordinates?.map(c => [c.lat, c.lng]) || []
+    );
+    if (allCoords.length >= 2) {
+      const bounds = L.latLngBounds(allCoords);
+      map.fitBounds(bounds, { padding: [60, 60], animate: true, maxZoom: 15 });
+    }
+  } catch(e) {}
+
+  // Build elevation profile asynchronously
+  closeElevationPanel();
+  buildElevationProfile();
 });
 
 // Trail summary card actions
@@ -2955,13 +3081,13 @@ document.getElementById('trail-card-clear-btn').addEventListener('click', () => 
   closeTrailPanel(true);
 });
 document.getElementById('trail-card-nav-btn').addEventListener('click', () => {
-  const allSteps = dedupeSteps(trailState.segments.flatMap(seg => seg.steps || []));
+  const allSteps = buildTrailNavSteps();
   if (allSteps.length === 0) { toast('No turn-by-turn data for this route'); return; }
   document.getElementById('trail-summary-card').classList.remove('show');
   startNavigation(allSteps, 'trail');
 });
 document.getElementById('trail-card-steps-btn').addEventListener('click', () => {
-  const allSteps = dedupeSteps(trailState.segments.flatMap(seg => seg.steps || []));
+  const allSteps = buildTrailNavSteps();
   showInstructionsPanel(allSteps);
 });
 
@@ -3096,8 +3222,8 @@ function saveGPX(mode, routeName) {
   ).join('\n');
   const gpxContent = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<gpx version="1.1" creator="Wayfind" xmlns="http://www.topografix.com/GPX/1/1">\n' +
-    '  <metadata><n>' + escHtml(name) + '</n><time>' + now + '</time></metadata>\n' +
-    '  <trk><n>' + escHtml(name) + '</n><trkseg>\n' + trkpts + '\n  </trkseg></trk>\n</gpx>';
+    '  <metadata><name>' + escHtml(name) + '</name><time>' + now + '</time></metadata>\n' +
+    '  <trk><name>' + escHtml(name) + '</name><trkseg>\n' + trkpts + '\n  </trkseg></trk>\n</gpx>';
   const blob = new Blob([gpxContent], { type: 'application/gpx+xml' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3245,11 +3371,21 @@ async function doExport() {
     const rect = mapEl.getBoundingClientRect();
     const scale = 2;
 
+    // Hide Leaflet's overlay/marker/shadow panes before html2canvas so they are NOT
+    // baked into the tile screenshot. We redraw all route lines manually below,
+    // which prevents phantom / doubled route lines in the export.
+    const paneNames = ['overlayPane', 'shadowPane', 'markerPane', 'tooltipPane', 'popupPane'];
+    const hiddenPanes = paneNames.map(n => map.getPanes()[n]).filter(Boolean);
+    hiddenPanes.forEach(el => { el.style.visibility = 'hidden'; });
+
     const canvas = await html2canvas(mapEl, {
       useCORS: true, allowTaint: true,
       width: rect.width, height: rect.height,
       scale, logging: false, backgroundColor: '#f5f6fa'
     });
+
+    // Restore pane visibility immediately after capture
+    hiddenPanes.forEach(el => { el.style.visibility = ''; });
 
     const final = document.createElement('canvas');
     final.width  = canvas.width;
@@ -3347,6 +3483,20 @@ function setLibrary(arr) {
 function saveRouteToLibrary(name) {
   if (trailState.waypoints.length < 2) { toast('Need at least 2 waypoints to save'); return; }
   const lib = getLibrary();
+
+  // Collect full routed path from segment coordinates (the actual road-following path).
+  // Simplify to ≤500 pts so we don't blow localStorage with very long routes.
+  let fullPath = [];
+  trailState.segments.forEach(seg => {
+    const coords = seg.routingCtrl?._routes?.[0]?.coordinates || [];
+    coords.forEach(ll => fullPath.push([ll.lat, ll.lng]));
+  });
+  if (fullPath.length > 500) fullPath = rdpSimplify(fullPath, 0.00005);
+  if (fullPath.length > 500) {
+    const step = (fullPath.length - 1) / 499;
+    fullPath = Array.from({ length: 500 }, (_, i) => fullPath[Math.round(i * step)]);
+  }
+
   const entry = {
     id: 'r_' + Date.now(),
     name: name || defaultRouteName(),
@@ -3354,7 +3504,8 @@ function saveRouteToLibrary(name) {
     date: new Date().toISOString(),
     dist: trailState.totalDist,
     time: trailState.totalTime,
-    waypoints: trailState.waypoints.map(w => ({ latlng: w.latlng, name: w.name }))
+    waypoints: trailState.waypoints.map(w => ({ latlng: w.latlng, name: w.name })),
+    path: fullPath.length >= 2 ? fullPath : null  // full routed path for GPX export
   };
   lib.unshift(entry); // newest first
   if (lib.length > 30) lib.splice(30); // cap at 30
@@ -3405,6 +3556,28 @@ async function restoreRouteData(data) {
     if (i < data.waypoints.length - 1) await new Promise(r => setTimeout(r, 80));
   }
   toast('Route loaded ✓');
+
+  // Finish the route, fit bounds, and build elevation profile
+  recalcTrailTotals();
+  document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
+  document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
+  document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
+  document.getElementById('trail-summary-card').classList.add('show');
+  closeTrailPanel(true);
+
+  // Fit map to the loaded route
+  try {
+    const allCoords = trailState.segments.flatMap(seg =>
+      seg.routingCtrl?._routes?.[0]?.coordinates?.map(c => [c.lat, c.lng]) || []
+    );
+    if (allCoords.length >= 2) {
+      map.fitBounds(L.latLngBounds(allCoords), { padding: [60, 60], animate: true, maxZoom: 15 });
+    }
+  } catch(e) {}
+
+  // Build elevation profile
+  closeElevationPanel();
+  buildElevationProfile();
 }
 
 // ─── Save Route Modal ───
@@ -3444,7 +3617,10 @@ document.getElementById('save-as-gpx-btn').addEventListener('click', () => {
 
 // ─── Routes Library Panel ───
 function openRoutesPanel() {
-  renderRoutesPanel();
+  // Clear search on open
+  const searchEl = document.getElementById('routes-search-input');
+  if (searchEl) searchEl.value = '';
+  renderRoutesPanel('');
   document.getElementById('routes-panel').classList.add('open');
 }
 function closeRoutesPanel() {
@@ -3464,17 +3640,29 @@ document.getElementById('routes-panel-gpx-btn').addEventListener('click', () => 
   document.getElementById('gpx-file-input').click();
 });
 
-function renderRoutesPanel() {
+// Live search in routes panel
+document.getElementById('routes-search-input').addEventListener('input', function() {
+  renderRoutesPanel(this.value);
+});
+
+function renderRoutesPanel(query = '') {
   const lib = getLibrary();
   const draft = getDraft();
   const container = document.getElementById('routes-list');
   container.innerHTML = '';
+
+  const q = (query || '').trim().toLowerCase();
 
   const allItems = [];
   if (draft && draft.waypoints?.length >= 2) {
     allItems.push({ ...draft, id: '__draft__', isDraft: true });
   }
   allItems.push(...lib);
+
+  // Filter by search query (only filters saved/draft items, not the count header)
+  const filtered = q
+    ? allItems.filter(r => r.name?.toLowerCase().includes(q))
+    : allItems;
 
   if (allItems.length === 0) {
     container.innerHTML = `
@@ -3485,7 +3673,16 @@ function renderRoutesPanel() {
     return;
   }
 
-  allItems.forEach(route => {
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div id="routes-empty">
+        <div class="re-icon" style="font-size:24px;opacity:0.4">🔍</div>
+        <p style="font-size:13px;color:var(--text-muted)">No routes match "<strong>${escHtml(q)}</strong>"</p>
+      </div>`;
+    return;
+  }
+
+  filtered.forEach(route => {
     const date = route.isDraft ? 'Unsaved draft' :
       new Date(route.date).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
     const distStr = route.dist ? fmtDist(route.dist) : '—';
@@ -3542,7 +3739,10 @@ function renderRoutesPanel() {
 }
 
 function exportLibraryRouteGPX(route) {
-  const coordPairs = route.waypoints.map(w => w.latlng);
+  // Prefer the full routed path (saved with route); fall back to waypoints only.
+  const coordPairs = (route.path && route.path.length >= 2)
+    ? route.path
+    : route.waypoints.map(w => w.latlng);
   if (coordPairs.length === 0) { toast('No route data'); return; }
   const now = new Date().toISOString();
   const trkpts = coordPairs.map(([lat, lng]) =>
@@ -3577,6 +3777,298 @@ document.getElementById('trail-card-library-btn').addEventListener('click', () =
 
 // Also keep old trail-card-gpx-btn reference in case anything still points to it
 // (the HTML was replaced above, so this is a no-op guard)
+
+// ════════════════════════════════════════════════════════════
+// ELEVATION PROFILE
+// ════════════════════════════════════════════════════════════
+
+const elevState = {
+  points: [],       // [{lat,lng,dist,ele}] with cumulative dist in metres
+  totalDist: 0,
+  minEle: 0, maxEle: 0,
+  gain: 0,
+  scrubMarker: null
+};
+
+function closeElevationPanel() {
+  document.getElementById('elev-panel').classList.remove('show');
+  document.body.classList.remove('has-elev-panel');
+  if (elevState.scrubMarker) { map.removeLayer(elevState.scrubMarker); elevState.scrubMarker = null; }
+  elevState.points = [];
+}
+
+document.getElementById('elev-panel-close').addEventListener('click', closeElevationPanel);
+
+async function buildElevationProfile() {
+  // 1. Extract full routed path from all trail segments
+  const rawPath = [];
+  trailState.segments.forEach(seg => {
+    const coords = seg.routingCtrl?._routes?.[0]?.coordinates || [];
+    coords.forEach(c => rawPath.push([c.lat, c.lng]));
+  });
+  if (rawPath.length < 2) return;
+
+  // 2. Uniform sample to ≤100 points (Open-Meteo limit per request)
+  const MAX_SAMPLES = 100;
+  const stepSize = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
+  const sampled = [];
+  for (let i = 0; i < rawPath.length; i += stepSize) sampled.push(rawPath[i]);
+  if (sampled[sampled.length - 1] !== rawPath[rawPath.length - 1]) sampled.push(rawPath[rawPath.length - 1]);
+
+  // 3. Compute cumulative distances
+  let cumDist = 0;
+  const sampledPts = sampled.map((p, i) => {
+    if (i > 0) cumDist += haversineM(sampled[i-1][0], sampled[i-1][1], p[0], p[1]);
+    return { lat: p[0], lng: p[1], dist: cumDist };
+  });
+
+  // 4. Show panel in loading state
+  const panel = document.getElementById('elev-panel');
+  const loadingEl = document.getElementById('elev-loading');
+  loadingEl.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
+  loadingEl.style.display = 'flex';
+  panel.classList.add('show');
+  document.body.classList.add('has-elev-panel');
+
+  try {
+    // 5. Open-Meteo elevation API — free, CORS-enabled, no key needed
+    const lats = sampledPts.map(p => p.lat.toFixed(5)).join(',');
+    const lngs = sampledPts.map(p => p.lng.toFixed(5)).join(',');
+    const resp = await fetch(
+      `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`
+    );
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    const eles = data.elevation;
+    if (!Array.isArray(eles) || eles.length === 0) throw new Error('No elevation data');
+
+    eles.forEach((e, i) => { if (i < sampledPts.length) sampledPts[i].ele = e; });
+
+    elevState.points    = sampledPts.filter(p => typeof p.ele === 'number');
+    elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
+    const allEles       = elevState.points.map(p => p.ele);
+    elevState.minEle    = Math.min(...allEles);
+    elevState.maxEle    = Math.max(...allEles);
+
+    // Elevation gain
+    let gain = 0;
+    for (let i = 1; i < elevState.points.length; i++) {
+      const d = elevState.points[i].ele - elevState.points[i-1].ele;
+      if (d > 0) gain += d;
+    }
+    elevState.gain = Math.round(gain);
+
+    loadingEl.style.display = 'none';
+
+    requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
+
+  } catch(err) {
+    loadingEl.innerHTML = '⚠ Elevation unavailable';
+    loadingEl.style.display = 'flex';
+    console.warn('Elevation fetch error:', err);
+  }
+}
+
+function drawElevationChart(scrubFrac = -1) {
+  const canvas = document.getElementById('elev-canvas');
+  const wrap   = document.getElementById('elev-chart-wrap');
+  if (!canvas || !wrap || elevState.points.length < 2) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const pts    = elevState.points;
+  const totalD = elevState.totalDist || 1;
+
+  // Layout: left margin for Y labels, bottom margin for distance ticks
+  const ML = 36, MB = 16, MT = 4, MR = 28;
+  const CW = W - ML - MR, CH = H - MB - MT;  // chart area
+
+  const range  = elevState.maxEle - elevState.minEle || 1;
+  const minE   = elevState.minEle - range * 0.08;
+  const maxE   = elevState.maxEle + range * 0.08;
+
+  function xOf(i) { return ML + (pts[i].dist / totalD) * CW; }
+  function yOf(i) { return MT + CH - ((pts[i].ele - minE) / (maxE - minE)) * CH; }
+  function xOfFrac(f) { return ML + f * CW; }
+
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Subtle grid lines ────────────────────────────────────
+  ctx.strokeStyle = 'rgba(228,230,239,0.8)';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([2, 3]);
+  [0.25, 0.5, 0.75].forEach(f => {
+    const y = MT + f * CH;
+    ctx.beginPath(); ctx.moveTo(ML, y); ctx.lineTo(ML + CW, y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // ── Gradient fill under profile ──────────────────────────
+  const grad = ctx.createLinearGradient(0, MT, 0, MT + CH);
+  grad.addColorStop(0,   'rgba(22,163,74,0.32)');
+  grad.addColorStop(0.6, 'rgba(22,163,74,0.08)');
+  grad.addColorStop(1,   'rgba(22,163,74,0.0)');
+
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), MT + CH);
+  pts.forEach((_, i) => ctx.lineTo(xOf(i), yOf(i)));
+  ctx.lineTo(xOf(pts.length - 1), MT + CH);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // ── Profile line ─────────────────────────────────────────
+  ctx.beginPath();
+  pts.forEach((_, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(i)) : ctx.lineTo(xOf(i), yOf(i)));
+  ctx.strokeStyle = '#16a34a';
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  // ── Y-axis labels (min / max elevation) ─────────────────
+  ctx.font      = `600 9px Figtree, sans-serif`;
+  ctx.fillStyle = 'rgba(107,114,128,0.85)';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(elevState.maxEle) + 'm', ML - 3, MT + 9);
+  ctx.fillText(Math.round(elevState.minEle) + 'm', ML - 3, MT + CH);
+
+  // ── Gain chip (top-right of chart area) ──────────────────
+  const gainTxt = '↑ ' + elevState.gain + 'm';
+  ctx.font      = `700 9.5px Figtree, sans-serif`;
+  const gtW     = ctx.measureText(gainTxt).width;
+  const chipX   = ML + CW - gtW - 10, chipY = MT + 3;
+  ctx.fillStyle = 'rgba(22,163,74,0.13)';
+  ctx.beginPath();
+  ctx.roundRect(chipX - 4, chipY, gtW + 8, 14, 6);
+  ctx.fill();
+  ctx.fillStyle = '#15803d';
+  ctx.textAlign = 'left';
+  ctx.fillText(gainTxt, chipX, chipY + 10);
+
+  // ── Distance ticks along the bottom ──────────────────────
+  const totalKm = totalD / 1000;
+  const tickInterval = totalKm <= 3 ? 0.5 : totalKm <= 8 ? 1 : totalKm <= 20 ? 5 : totalKm <= 50 ? 10 : 25;
+  ctx.font      = `600 8.5px Figtree, sans-serif`;
+  ctx.fillStyle = 'rgba(156,163,175,0.9)';
+  ctx.textAlign = 'center';
+  for (let km = tickInterval; km < totalKm - tickInterval * 0.4; km += tickInterval) {
+    const tx = xOfFrac(km / totalKm);
+    ctx.fillStyle = 'rgba(228,230,239,0.9)';
+    ctx.fillRect(tx - 0.5, MT + CH + 1, 1, 4);
+    ctx.fillStyle = 'rgba(156,163,175,0.9)';
+    ctx.fillText(km + 'k', tx, H - 2);
+  }
+
+  // ── Scrubber ─────────────────────────────────────────────
+  if (scrubFrac >= 0) {
+    const sx = xOfFrac(scrubFrac);
+    const targetDist = scrubFrac * totalD;
+    const nearIdx = pts.reduce((best, p, i) =>
+      Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
+    const sy = yOf(nearIdx);
+
+    ctx.beginPath();
+    ctx.moveTo(sx, MT); ctx.lineTo(sx, MT + CH);
+    ctx.strokeStyle = 'rgba(37,99,235,0.45)';
+    ctx.lineWidth   = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle   = '#2563eb';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+  }
+}
+
+function setupElevationScrubber() {
+  const wrap    = document.getElementById('elev-chart-wrap');
+  let canvas    = document.getElementById('elev-canvas');
+  const tooltip = document.getElementById('elev-tooltip');
+  let animFrame = null;
+
+  // Layout constants must match drawElevationChart
+  const ML = 36, MB = 16, MT = 4, MR = 28;
+
+  function getScrubFrac(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const chartLeft  = rect.left  + (ML / rect.width)  * rect.width;
+    const chartRight = rect.right - (MR / rect.width)  * rect.width;
+    return Math.max(0, Math.min(1, (clientX - chartLeft) / (chartRight - chartLeft)));
+  }
+
+  function doScrub(clientX) {
+    const frac = getScrubFrac(clientX);
+    const pts  = elevState.points;
+    if (!pts.length) return;
+
+    const targetDist = frac * elevState.totalDist;
+    const nearIdx = pts.reduce((best, p, i) =>
+      Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
+    const pt = pts[nearIdx];
+
+    // Move / create scrub marker on map
+    if (!elevState.scrubMarker) {
+      elevState.scrubMarker = L.marker([pt.lat, pt.lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div style="width:14px;height:14px;border-radius:50%;background:#2563eb;border:3px solid white;box-shadow:0 2px 10px rgba(37,99,235,0.55);"></div>',
+          iconSize: [14,14], iconAnchor: [7,7]
+        }),
+        zIndexOffset: 3000, interactive: false
+      }).addTo(map);
+    } else {
+      elevState.scrubMarker.setLatLng([pt.lat, pt.lng]);
+    }
+
+    // Position tooltip above cursor within the chart area
+    const rect    = canvas.getBoundingClientRect();
+    const CW      = rect.width - ML - MR;
+    const sx      = ML + frac * CW;  // pixel position within canvas element
+    const halfTW  = 50;
+    const left    = Math.max(ML + halfTW, Math.min(rect.width - MR - halfTW, sx));
+    const kmStr   = (pt.dist / 1000).toFixed(1) + ' km';
+    const eleStr  = Math.round(pt.ele) + 'm';
+    tooltip.textContent  = `${kmStr} · ${eleStr}`;
+    tooltip.style.left   = left + 'px';
+    tooltip.style.display = 'block';
+
+    if (animFrame) cancelAnimationFrame(animFrame);
+    animFrame = requestAnimationFrame(() => drawElevationChart(frac));
+  }
+
+  function endScrub() {
+    tooltip.style.display = 'none';
+    if (elevState.scrubMarker) { map.removeLayer(elevState.scrubMarker); elevState.scrubMarker = null; }
+    if (animFrame) cancelAnimationFrame(animFrame);
+    drawElevationChart();
+  }
+
+  // Replace canvas to clear old listeners
+  const newCanvas = canvas.cloneNode(true);
+  canvas.parentNode.replaceChild(newCanvas, canvas);
+  canvas = newCanvas;  // update local ref
+
+  canvas.addEventListener('mousemove', e => doScrub(e.clientX));
+  canvas.addEventListener('mouseleave', endScrub);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('touchend', endScrub);
+}
+
+// Also rebuild elevation profile when a route is loaded from the library
+// (handled directly in restoreRouteData)
 
 // ════════════════════════════════════════════════════════════
 // LOADER
