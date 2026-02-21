@@ -1072,24 +1072,37 @@ body.trail-mode #map { cursor: crosshair; }
   position: fixed; bottom: 80px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   opacity: 0; pointer-events: none; z-index: 898;
-  background: var(--white); border-radius: var(--radius-lg);
+  background: var(--white); border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl); border: 1.5px solid var(--trail);
-  width: min(600px, calc(100vw - 32px));
+  width: min(680px, calc(100vw - 32px));
   transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
 #elev-panel.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
 /* Push the trail summary card up when elev panel is visible */
-body.has-elev-panel #trail-summary-card { bottom: 166px; }
+body.has-elev-panel #trail-summary-card { bottom: 230px; }
 
-/* Single unified chart area — no header row */
+#elev-panel-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+#elev-panel-title { font-size: 12px; font-weight: 700; color: var(--trail); flex-shrink: 0; display:flex;align-items:center;gap:4px; }
+#elev-panel-stats { font-size: 11px; color: var(--text-muted); flex: 1; }
+#elev-panel-close {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface2); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); font-size: 12px; flex-shrink: 0;
+  transition: background var(--tr);
+}
+#elev-panel-close:hover { background: var(--border); color: var(--red); }
 #elev-chart-wrap {
-  position: relative; height: 72px; overflow: hidden;
-  border-radius: calc(var(--radius-lg) - 1px);
+  position: relative; height: 80px; overflow: hidden;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   cursor: crosshair;
 }
 #elev-canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  display: block;
 }
 #elev-tooltip {
   position: absolute; top: 4px;
@@ -1102,20 +1115,8 @@ body.has-elev-panel #trail-summary-card { bottom: 166px; }
 #elev-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-size: 12px; color: var(--text-muted); gap: 6px; font-weight: 500;
-  background: var(--white); border-radius: calc(var(--radius-lg) - 1px);
 }
 .elev-spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--trail); border-radius: 50%; animation: spin 0.8s linear infinite; }
-#elev-panel-close {
-  position: absolute; top: 5px; right: 6px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: rgba(255,255,255,0.85); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-muted); font-size: 11px; z-index: 2;
-  transition: background var(--tr), color var(--tr);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  line-height: 1;
-}
-#elev-panel-close:hover { background: var(--red-light); color: var(--red); }
 
 /* ─── ROUTES SEARCH ─── */
 #routes-search-wrap {
@@ -1140,7 +1141,7 @@ body.has-elev-panel #trail-summary-card { bottom: 166px; }
 @media (max-width: 768px) {
   #elev-panel { bottom: 72px; width: calc(100vw - 24px); left: 12px; transform: translateX(0) translateY(20px); }
   #elev-panel.show { transform: translateX(0) translateY(0); }
-  body.has-elev-panel #trail-summary-card { bottom: 160px; }
+  body.has-elev-panel #trail-summary-card { bottom: 225px; }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1618,11 +1619,18 @@ body.has-elev-panel #trail-summary-card { bottom: 166px; }
 
 <!-- Elevation Profile Panel -->
 <div id="elev-panel">
-  <button id="elev-panel-close" title="Close">✕</button>
+  <div id="elev-panel-header">
+    <span id="elev-panel-title">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-10 5 6 3-4 5 8"/></svg>
+      Elevation Profile
+    </span>
+    <span id="elev-panel-stats">—</span>
+    <button id="elev-panel-close" title="Close">✕</button>
+  </div>
   <div id="elev-chart-wrap">
     <canvas id="elev-canvas"></canvas>
     <div id="elev-tooltip"></div>
-    <div id="elev-loading"><div class="elev-spin"></div> Loading elevation…</div>
+    <div id="elev-loading"><div class="elev-spin"></div> Loading elevation data…</div>
   </div>
 </div>
 
@@ -3808,11 +3816,11 @@ async function buildElevationProfile() {
   });
   if (rawPath.length < 2) return;
 
-  // 2. Uniform sample to ≤100 points (Open-Meteo limit per request)
-  const MAX_SAMPLES = 100;
-  const stepSize = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
+  // 2. Uniform sample to ≤80 points for elevation API
+  const MAX_SAMPLES = 80;
+  const step = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
   const sampled = [];
-  for (let i = 0; i < rawPath.length; i += stepSize) sampled.push(rawPath[i]);
+  for (let i = 0; i < rawPath.length; i += step) sampled.push(rawPath[i]);
   if (sampled[sampled.length - 1] !== rawPath[rawPath.length - 1]) sampled.push(rawPath[rawPath.length - 1]);
 
   // 3. Compute cumulative distances
@@ -3824,34 +3832,31 @@ async function buildElevationProfile() {
 
   // 4. Show panel in loading state
   const panel = document.getElementById('elev-panel');
-  const loadingEl = document.getElementById('elev-loading');
-  loadingEl.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
-  loadingEl.style.display = 'flex';
+  document.getElementById('elev-loading').innerHTML = '<div class="elev-spin"></div> Loading elevation data…';
+  document.getElementById('elev-loading').style.display = 'flex';
+  document.getElementById('elev-panel-stats').textContent = '—';
   panel.classList.add('show');
   document.body.classList.add('has-elev-panel');
 
   try {
-    // 5. Open-Meteo elevation API — free, CORS-enabled, no key needed
-    const lats = sampledPts.map(p => p.lat.toFixed(5)).join(',');
-    const lngs = sampledPts.map(p => p.lng.toFixed(5)).join(',');
-    const resp = await fetch(
-      `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`
-    );
+    // 5. Fetch elevation data (Open-Topo Data SRTM 90m, free, CORS-enabled)
+    const locs = sampledPts.map(p => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`).join('|');
+    const resp = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locs)}`);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
 
-    const eles = data.elevation;
-    if (!Array.isArray(eles) || eles.length === 0) throw new Error('No elevation data');
+    if (!data.results || data.results.length === 0) throw new Error('No elevation results');
 
-    eles.forEach((e, i) => { if (i < sampledPts.length) sampledPts[i].ele = e; });
+    data.results.forEach((r, i) => { if (i < sampledPts.length) sampledPts[i].ele = r.elevation ?? 0; });
 
-    elevState.points    = sampledPts.filter(p => typeof p.ele === 'number');
+    elevState.points = sampledPts.filter(p => typeof p.ele === 'number');
     elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
-    const allEles       = elevState.points.map(p => p.ele);
-    elevState.minEle    = Math.min(...allEles);
-    elevState.maxEle    = Math.max(...allEles);
 
-    // Elevation gain
+    const eles = elevState.points.map(p => p.ele);
+    elevState.minEle = Math.min(...eles);
+    elevState.maxEle = Math.max(...eles);
+
+    // Compute elevation gain
     let gain = 0;
     for (let i = 1; i < elevState.points.length; i++) {
       const d = elevState.points[i].ele - elevState.points[i-1].ele;
@@ -3859,158 +3864,127 @@ async function buildElevationProfile() {
     }
     elevState.gain = Math.round(gain);
 
-    loadingEl.style.display = 'none';
+    document.getElementById('elev-loading').style.display = 'none';
+    const rangeM = Math.round(elevState.maxEle - elevState.minEle);
+    document.getElementById('elev-panel-stats').textContent =
+      `↑ ${elevState.gain}m gain · ${rangeM}m range · ${Math.round(elevState.minEle)}–${Math.round(elevState.maxEle)}m`;
 
+    // Small delay to ensure layout is ready, then draw
     requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
 
   } catch(err) {
-    loadingEl.innerHTML = '⚠ Elevation unavailable';
-    loadingEl.style.display = 'flex';
+    document.getElementById('elev-loading').innerHTML = '⚠ Elevation data unavailable';
+    document.getElementById('elev-loading').style.display = 'flex';
     console.warn('Elevation fetch error:', err);
   }
 }
 
 function drawElevationChart(scrubFrac = -1) {
   const canvas = document.getElementById('elev-canvas');
-  const wrap   = document.getElementById('elev-chart-wrap');
+  const wrap = document.getElementById('elev-chart-wrap');
   if (!canvas || !wrap || elevState.points.length < 2) return;
 
   const dpr = window.devicePixelRatio || 1;
   const W = wrap.clientWidth, H = wrap.clientHeight;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
+  canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const pts    = elevState.points;
+  const pts = elevState.points;
   const totalD = elevState.totalDist || 1;
 
-  // Layout: left margin for Y labels, bottom margin for distance ticks
-  const ML = 36, MB = 16, MT = 4, MR = 28;
-  const CW = W - ML - MR, CH = H - MB - MT;  // chart area
+  // Vertical padding so line isn't clipped at top/bottom
+  const pad = 8;
+  const range = elevState.maxEle - elevState.minEle || 1;
+  const minE = elevState.minEle - range * 0.12;
+  const maxE = elevState.maxEle + range * 0.12;
 
-  const range  = elevState.maxEle - elevState.minEle || 1;
-  const minE   = elevState.minEle - range * 0.08;
-  const maxE   = elevState.maxEle + range * 0.08;
+  function xOf(i) { return (pts[i].dist / totalD) * W; }
+  function yOf(i) { return H - pad - ((pts[i].ele - minE) / (maxE - minE)) * (H - pad * 2); }
 
-  function xOf(i) { return ML + (pts[i].dist / totalD) * CW; }
-  function yOf(i) { return MT + CH - ((pts[i].ele - minE) / (maxE - minE)) * CH; }
-  function xOfFrac(f) { return ML + f * CW; }
-
+  // ── Background ──────────────────────────────────────────
   ctx.clearRect(0, 0, W, H);
 
-  // ── Subtle grid lines ────────────────────────────────────
-  ctx.strokeStyle = 'rgba(228,230,239,0.8)';
-  ctx.lineWidth   = 1;
-  ctx.setLineDash([2, 3]);
-  [0.25, 0.5, 0.75].forEach(f => {
-    const y = MT + f * CH;
-    ctx.beginPath(); ctx.moveTo(ML, y); ctx.lineTo(ML + CW, y); ctx.stroke();
-  });
-  ctx.setLineDash([]);
-
-  // ── Gradient fill under profile ──────────────────────────
-  const grad = ctx.createLinearGradient(0, MT, 0, MT + CH);
-  grad.addColorStop(0,   'rgba(22,163,74,0.32)');
-  grad.addColorStop(0.6, 'rgba(22,163,74,0.08)');
-  grad.addColorStop(1,   'rgba(22,163,74,0.0)');
+  // ── Gradient fill under profile curve ───────────────────
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(22,163,74,0.38)');
+  grad.addColorStop(0.7, 'rgba(22,163,74,0.08)');
+  grad.addColorStop(1, 'rgba(22,163,74,0.0)');
 
   ctx.beginPath();
-  ctx.moveTo(xOf(0), MT + CH);
+  ctx.moveTo(xOf(0), H);
   pts.forEach((_, i) => ctx.lineTo(xOf(i), yOf(i)));
-  ctx.lineTo(xOf(pts.length - 1), MT + CH);
+  ctx.lineTo(xOf(pts.length - 1), H);
   ctx.closePath();
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // ── Profile line ─────────────────────────────────────────
+  // ── Profile line ────────────────────────────────────────
   ctx.beginPath();
   pts.forEach((_, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(i)) : ctx.lineTo(xOf(i), yOf(i)));
   ctx.strokeStyle = '#16a34a';
-  ctx.lineWidth   = 2;
-  ctx.lineJoin    = 'round';
-  ctx.lineCap     = 'round';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.setLineDash([]);
   ctx.stroke();
 
-  // ── Y-axis labels (min / max elevation) ─────────────────
-  ctx.font      = `600 9px Figtree, sans-serif`;
-  ctx.fillStyle = 'rgba(107,114,128,0.85)';
-  ctx.textAlign = 'right';
-  ctx.fillText(Math.round(elevState.maxEle) + 'm', ML - 3, MT + 9);
-  ctx.fillText(Math.round(elevState.minEle) + 'm', ML - 3, MT + CH);
-
-  // ── Gain chip (top-right of chart area) ──────────────────
-  const gainTxt = '↑ ' + elevState.gain + 'm';
-  ctx.font      = `700 9.5px Figtree, sans-serif`;
-  const gtW     = ctx.measureText(gainTxt).width;
-  const chipX   = ML + CW - gtW - 10, chipY = MT + 3;
-  ctx.fillStyle = 'rgba(22,163,74,0.13)';
-  ctx.beginPath();
-  ctx.roundRect(chipX - 4, chipY, gtW + 8, 14, 6);
-  ctx.fill();
-  ctx.fillStyle = '#15803d';
-  ctx.textAlign = 'left';
-  ctx.fillText(gainTxt, chipX, chipY + 10);
-
-  // ── Distance ticks along the bottom ──────────────────────
+  // ── Km tick marks along bottom ───────────────────────────
   const totalKm = totalD / 1000;
-  const tickInterval = totalKm <= 3 ? 0.5 : totalKm <= 8 ? 1 : totalKm <= 20 ? 5 : totalKm <= 50 ? 10 : 25;
-  ctx.font      = `600 8.5px Figtree, sans-serif`;
-  ctx.fillStyle = 'rgba(156,163,175,0.9)';
+  const tickInterval = totalKm <= 5 ? 1 : totalKm <= 20 ? 5 : totalKm <= 50 ? 10 : 25;
+  ctx.font = `bold ${9 * dpr / dpr}px Figtree, sans-serif`;
+  ctx.fillStyle = 'rgba(107,114,128,0.7)';
   ctx.textAlign = 'center';
-  for (let km = tickInterval; km < totalKm - tickInterval * 0.4; km += tickInterval) {
-    const tx = xOfFrac(km / totalKm);
-    ctx.fillStyle = 'rgba(228,230,239,0.9)';
-    ctx.fillRect(tx - 0.5, MT + CH + 1, 1, 4);
-    ctx.fillStyle = 'rgba(156,163,175,0.9)';
-    ctx.fillText(km + 'k', tx, H - 2);
+  for (let km = tickInterval; km < totalKm - tickInterval * 0.5; km += tickInterval) {
+    const tx = (km / totalKm) * W;
+    ctx.fillRect(tx - 0.5, H - 3, 1, 3);
+    ctx.fillText(km + 'km', tx, H - 4);
   }
 
   // ── Scrubber ─────────────────────────────────────────────
   if (scrubFrac >= 0) {
-    const sx = xOfFrac(scrubFrac);
+    const sx = scrubFrac * W;
+    // Find nearest point
     const targetDist = scrubFrac * totalD;
     const nearIdx = pts.reduce((best, p, i) =>
       Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
     const sy = yOf(nearIdx);
 
+    // Vertical dashed line
     ctx.beginPath();
-    ctx.moveTo(sx, MT); ctx.lineTo(sx, MT + CH);
-    ctx.strokeStyle = 'rgba(37,99,235,0.45)';
-    ctx.lineWidth   = 1.5;
+    ctx.moveTo(sx, 0); ctx.lineTo(sx, H);
+    ctx.strokeStyle = 'rgba(37,99,235,0.5)';
+    ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
 
+    // Dot on profile line
     ctx.beginPath();
-    ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle   = '#2563eb';
+    ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#2563eb';
     ctx.fill();
     ctx.strokeStyle = 'white';
-    ctx.lineWidth   = 2;
+    ctx.lineWidth = 2;
     ctx.stroke();
   }
 }
 
+let elevScrubActive = false;
+
 function setupElevationScrubber() {
-  const wrap    = document.getElementById('elev-chart-wrap');
-  let canvas    = document.getElementById('elev-canvas');
+  const canvas = document.getElementById('elev-canvas');
   const tooltip = document.getElementById('elev-tooltip');
   let animFrame = null;
 
-  // Layout constants must match drawElevationChart
-  const ML = 36, MB = 16, MT = 4, MR = 28;
-
   function getScrubFrac(clientX) {
     const rect = canvas.getBoundingClientRect();
-    const chartLeft  = rect.left  + (ML / rect.width)  * rect.width;
-    const chartRight = rect.right - (MR / rect.width)  * rect.width;
-    return Math.max(0, Math.min(1, (clientX - chartLeft) / (chartRight - chartLeft)));
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   }
 
   function doScrub(clientX) {
     const frac = getScrubFrac(clientX);
-    const pts  = elevState.points;
+    const pts = elevState.points;
     if (!pts.length) return;
 
     const targetDist = frac * elevState.totalDist;
@@ -4018,7 +3992,7 @@ function setupElevationScrubber() {
       Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
     const pt = pts[nearIdx];
 
-    // Move / create scrub marker on map
+    // Move / create scrub marker on map (no pan — just move the pin)
     if (!elevState.scrubMarker) {
       elevState.scrubMarker = L.marker([pt.lat, pt.lng], {
         icon: L.divIcon({
@@ -4032,18 +4006,19 @@ function setupElevationScrubber() {
       elevState.scrubMarker.setLatLng([pt.lat, pt.lng]);
     }
 
-    // Position tooltip above cursor within the chart area
-    const rect    = canvas.getBoundingClientRect();
-    const CW      = rect.width - ML - MR;
-    const sx      = ML + frac * CW;  // pixel position within canvas element
-    const halfTW  = 50;
-    const left    = Math.max(ML + halfTW, Math.min(rect.width - MR - halfTW, sx));
-    const kmStr   = (pt.dist / 1000).toFixed(1) + ' km';
-    const eleStr  = Math.round(pt.ele) + 'm';
-    tooltip.textContent  = `${kmStr} · ${eleStr}`;
-    tooltip.style.left   = left + 'px';
+    // Tooltip
+    const rect = canvas.getBoundingClientRect();
+    const sx = frac * rect.width;
+    const kmStr = (pt.dist / 1000).toFixed(1) + ' km';
+    const eleStr = Math.round(pt.ele) + 'm';
+    tooltip.textContent = `${kmStr} · ${eleStr}`;
+    // Clamp tooltip so it doesn't overflow edges
+    const tw = 90; // approx tooltip width
+    const left = Math.max(tw/2, Math.min(rect.width - tw/2, sx));
+    tooltip.style.left = left + 'px';
     tooltip.style.display = 'block';
 
+    // Redraw with scrubber
     if (animFrame) cancelAnimationFrame(animFrame);
     animFrame = requestAnimationFrame(() => drawElevationChart(frac));
   }
@@ -4055,20 +4030,20 @@ function setupElevationScrubber() {
     drawElevationChart();
   }
 
-  // Replace canvas to clear old listeners
+  // Remove old listeners by cloning
   const newCanvas = canvas.cloneNode(true);
   canvas.parentNode.replaceChild(newCanvas, canvas);
-  canvas = newCanvas;  // update local ref
 
-  canvas.addEventListener('mousemove', e => doScrub(e.clientX));
-  canvas.addEventListener('mouseleave', endScrub);
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
-  canvas.addEventListener('touchmove',  e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
-  canvas.addEventListener('touchend', endScrub);
+  newCanvas.addEventListener('mousemove', e => doScrub(e.clientX));
+  newCanvas.addEventListener('mouseleave', endScrub);
+  newCanvas.addEventListener('touchstart', e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  newCanvas.addEventListener('touchmove',  e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  newCanvas.addEventListener('touchend',   endScrub);
 }
 
 // Also rebuild elevation profile when a route is loaded from the library
-// (handled directly in restoreRouteData)
+// (injected into restoreRouteData below via a hook)
+const _origRestoreRouteData = window.__restoreRouteDataHook;
 
 // ════════════════════════════════════════════════════════════
 // LOADER
