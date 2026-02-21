@@ -3838,16 +3838,22 @@ async function buildElevationProfile() {
   panel.classList.add('show');
   document.body.classList.add('has-elev-panel');
 
-  try {
-    // 5. Fetch elevation data (Open-Topo Data SRTM 90m, free, CORS-enabled)
-    const locs = sampledPts.map(p => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`).join('|');
-    const resp = await fetch(`https://api.opentopodata.org/v1/srtm90m?locations=${encodeURIComponent(locs)}`);
+try {
+    // 5. Fetch elevation data using the highly reliable Open-Meteo API
+    const lats = sampledPts.map(p => p.lat.toFixed(5)).join(',');
+    const lngs = sampledPts.map(p => p.lng.toFixed(5)).join(',');
+    
+    const resp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    
     const data = await resp.json();
 
-    if (!data.results || data.results.length === 0) throw new Error('No elevation results');
+    if (!data.elevation || data.elevation.length === 0) throw new Error('No elevation results');
 
-    data.results.forEach((r, i) => { if (i < sampledPts.length) sampledPts[i].ele = r.elevation ?? 0; });
+    // Map the returned elevation numbers back to our points
+    data.elevation.forEach((ele, i) => { 
+      if (i < sampledPts.length) sampledPts[i].ele = ele ?? 0; 
+    });
 
     elevState.points = sampledPts.filter(p => typeof p.ele === 'number');
     elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
