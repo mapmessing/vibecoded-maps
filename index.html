@@ -526,10 +526,10 @@ body.trail-mode #map { cursor: crosshair; }
   z-index: 1050;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
   pointer-events: none;
   opacity: 0;
-  max-width: min(680px, calc(100vw - 32px));
+  max-width: min(640px, calc(100vw - 32px));
   width: max-content;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
@@ -548,21 +548,28 @@ body.trail-mode #map { cursor: crosshair; }
   box-shadow: var(--shadow-lg);
   border: 1.5px solid var(--border);
   overflow: hidden;
-  height: 50px;
+  height: 44px;
+  transition: border-radius 0.18s ease;
+}
+/* When mini elev is attached below, flatten bottom corners */
+#trail-panel.has-mini-elev #trail-bar {
+  border-radius: var(--radius-full) var(--radius-full) var(--radius-lg) var(--radius-lg);
+  border-bottom-color: var(--border-light);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
 }
 
 #trail-transport-row {
   display: flex;
   gap: 2px;
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-right: 1px solid var(--border);
   flex-shrink: 0;
 }
 .trail-transport-btn {
-  width: 34px; height: 34px;
+  width: 30px; height: 30px;
   border-radius: var(--radius-full);
   border: none; background: transparent;
-  font-size: 17px; cursor: pointer;
+  font-size: 15px; cursor: pointer;
   transition: all var(--tr);
   display: flex; align-items: center; justify-content: center;
 }
@@ -624,28 +631,28 @@ body.trail-mode #map { cursor: crosshair; }
 #trail-actions-row {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 5px 8px;
+  gap: 1px;
+  padding: 4px 6px;
   border-left: 1px solid var(--border);
   flex-shrink: 0;
 }
 .trail-action-btn {
-  width: 34px; height: 34px;
+  width: 30px; height: 30px;
   border-radius: var(--radius-full);
   border: none; background: transparent;
   cursor: pointer; transition: all var(--tr);
   display: flex; align-items: center; justify-content: center;
   color: var(--text-secondary);
-  font-size: 15px;
+  font-size: 13px;
 }
 .trail-action-btn:hover { background: var(--surface2); color: var(--text-primary); }
 .trail-action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
 .trail-action-btn.danger:hover { background: var(--red-light); color: var(--red); }
 .trail-action-btn.success {
   background: var(--trail); color: white;
-  width: auto; padding: 0 14px;
+  width: auto; padding: 0 12px;
   border-radius: var(--radius-full);
-  font-size: 13px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   gap: 4px;
 }
 .trail-action-btn.success:hover { background: #15803d; }
@@ -954,18 +961,18 @@ body.trail-mode #map { cursor: crosshair; }
 
 /* ─── TRAIL NAME ROW ─── */
 #trail-name-row {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 7px;
   background: var(--white); border-radius: var(--radius-full);
   box-shadow: var(--shadow-sm); border: 1.5px solid var(--border);
-  padding: 0 14px; height: 40px;
-  width: 100%; /* stretch to match bar width */
+  padding: 0 12px; height: 34px;
+  width: 100%;
   transition: border-color var(--tr);
 }
 #trail-name-row:focus-within { border-color: var(--trail); }
-#trail-name-icon { font-size: 14px; flex-shrink: 0; color: var(--text-muted); }
+#trail-name-icon { font-size: 12px; flex-shrink: 0; color: var(--text-muted); }
 #trail-name-input {
   flex: 1; border: none; outline: none; background: transparent;
-  font-family: var(--font); font-size: 13px; font-weight: 500;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
   color: var(--text-primary); min-width: 0;
 }
 #trail-name-input::placeholder { color: var(--text-muted); font-weight: 400; }
@@ -1072,37 +1079,23 @@ body.trail-mode #map { cursor: crosshair; }
   position: fixed; bottom: 80px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   opacity: 0; pointer-events: none; z-index: 898;
-  background: var(--white); border-radius: var(--radius-xl);
+  background: var(--white); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl); border: 1.5px solid var(--trail);
-  width: min(680px, calc(100vw - 32px));
+  width: min(600px, calc(100vw - 32px));
   transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
 #elev-panel.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
-/* Push the trail summary card up when elev panel is visible */
-body.has-elev-panel #trail-summary-card { bottom: 230px; }
+/* Shrink the standalone elev chart (used as fallback) */
 
-#elev-panel-header {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px 6px;
-  border-bottom: 1px solid var(--border-light);
-}
-#elev-panel-title { font-size: 12px; font-weight: 700; color: var(--trail); flex-shrink: 0; display:flex;align-items:center;gap:4px; }
-#elev-panel-stats { font-size: 11px; color: var(--text-muted); flex: 1; }
-#elev-panel-close {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--surface2); border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary); font-size: 12px; flex-shrink: 0;
-  transition: background var(--tr);
-}
-#elev-panel-close:hover { background: var(--border); color: var(--red); }
+/* Shrink the standalone elev chart (used as fallback) */
 #elev-chart-wrap {
-  position: relative; height: 80px; overflow: hidden;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  position: relative; height: 52px; overflow: hidden;
+  border-radius: calc(var(--radius-lg) - 1px);
   cursor: crosshair;
 }
 #elev-canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block;
 }
 #elev-tooltip {
   position: absolute; top: 4px;
@@ -1115,8 +1108,20 @@ body.has-elev-panel #trail-summary-card { bottom: 230px; }
 #elev-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   font-size: 12px; color: var(--text-muted); gap: 6px; font-weight: 500;
+  background: var(--white); border-radius: calc(var(--radius-lg) - 1px);
 }
 .elev-spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--trail); border-radius: 50%; animation: spin 0.8s linear infinite; }
+#elev-panel-close {
+  position: absolute; top: 5px; right: 6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(255,255,255,0.85); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 11px; z-index: 2;
+  transition: background var(--tr), color var(--tr);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  line-height: 1;
+}
+#elev-panel-close:hover { background: var(--red-light); color: var(--red); }
 
 /* ─── ROUTES SEARCH ─── */
 #routes-search-wrap {
@@ -1137,11 +1142,90 @@ body.has-elev-panel #trail-summary-card { bottom: 230px; }
   color: var(--text-muted); pointer-events: none; display: flex;
 }
 
+/* ─── MINI ELEVATION — seamless strip attached below trail bar ─── */
+#trail-mini-elev {
+  background: var(--white);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  overflow: hidden;
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  margin-top: -4px; /* visually attach to the bar above */
+}
+#trail-mini-elev.visible { display: flex; }
+#trail-mini-elev-wrap {
+  position: relative; height: 40px; cursor: crosshair; overflow: hidden;
+}
+#trail-mini-elev-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+}
+#trail-mini-elev-tooltip {
+  position: absolute; top: 2px;
+  background: rgba(17,24,39,0.82); color: white;
+  font-family: var(--font); font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: var(--radius-full);
+  pointer-events: none; display: none; transform: translateX(-50%);
+  white-space: nowrap; z-index: 2;
+}
+#trail-mini-elev-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text-muted); gap: 5px; font-weight: 500;
+  background: var(--white); z-index: 1;
+}
+
+/* ─── INLINE ELEVATION inside trail summary card ─── */
+#tsc-elev-inline {
+  width: 100%;
+  display: none;
+  flex-direction: column;
+  margin-top: 4px;
+}
+#trail-summary-card.elev-open #tsc-elev-inline { display: flex; }
+#tsc-elev-wrap {
+  position: relative; height: 50px; cursor: crosshair; overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--trail-mid);
+}
+#tsc-elev-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+}
+#tsc-elev-tooltip {
+  position: absolute; top: 2px;
+  background: rgba(17,24,39,0.82); color: white;
+  font-family: var(--font); font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: var(--radius-full);
+  pointer-events: none; display: none; transform: translateX(-50%);
+  white-space: nowrap; z-index: 2;
+}
+#tsc-elev-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text-muted); gap: 5px; font-weight: 500;
+  background: var(--white); border-radius: var(--radius-md); z-index: 1;
+}
+
+/* ─── COMPACT TRAIL SUMMARY CARD ─── */
+#trail-summary-card {
+  padding: 7px 8px 7px 12px;
+  gap: 8px;
+  flex-wrap: wrap;  /* allows inline elev to drop to second row */
+}
+#tsc-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+#tsc-route-name {
+  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 160px;
+}
+#tsc-stats { display: flex; align-items: center; gap: 5px; }
+#tsc-dist { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+#tsc-time { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+.tsc-sep  { color: var(--text-muted); font-size: 11px; }
+
 /* Mobile adjustments for elev panel */
 @media (max-width: 768px) {
   #elev-panel { bottom: 72px; width: calc(100vw - 24px); left: 12px; transform: translateX(0) translateY(20px); }
   #elev-panel.show { transform: translateX(0) translateY(0); }
-  body.has-elev-panel #trail-summary-card { bottom: 225px; }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1423,6 +1507,14 @@ body.has-elev-panel #trail-summary-card { bottom: 230px; }
       </button>
     </div>
   </div>
+  <!-- Mini elevation strip — attaches below trail bar -->
+  <div id="trail-mini-elev">
+    <div id="trail-mini-elev-wrap">
+      <canvas id="trail-mini-elev-canvas"></canvas>
+      <div id="trail-mini-elev-tooltip"></div>
+      <div id="trail-mini-elev-loading"><div class="elev-spin"></div> Loading…</div>
+    </div>
+  </div>
 </div>
 
 <!-- Nav Bar -->
@@ -1464,24 +1556,33 @@ body.has-elev-panel #trail-summary-card { bottom: 230px; }
   <div id="instr-list"></div>
 </div>
 
-<!-- Trail Summary Card — horizontal strip -->
+<!-- Trail Summary Card — compact horizontal strip -->
 <div id="trail-summary-card">
-  <div id="tsc-info">
-    <span id="tsc-icon">🥾</span>
-    <span id="tsc-dist">—</span>
-    <span class="tsc-sep">·</span>
-    <span id="tsc-time">—</span>
-    <span class="tsc-sep">·</span>
-    <span id="tsc-pts">— pts</span>
+  <div id="tsc-left">
+    <div id="tsc-route-name">Route</div>
+    <div id="tsc-stats">
+      <span id="tsc-dist">—</span>
+      <span class="tsc-sep">·</span>
+      <span id="tsc-time">—</span>
+    </div>
   </div>
   <div class="tsc-divider"></div>
   <div id="tsc-actions">
-    <button class="tsc-btn" id="trail-card-steps-btn" title="Turn-by-turn">📋</button>
-    <button class="tsc-btn" id="trail-card-edit-btn" title="Edit route">✎ Edit</button>
-    <button class="tsc-btn" id="trail-card-save-btn" title="Save route">💾 Save</button>
-    <button class="tsc-btn" id="trail-card-library-btn" title="Saved routes">📚</button>
-    <button class="tsc-btn danger" id="trail-card-clear-btn" title="Clear route">✕</button>
-    <button class="tsc-btn primary" id="trail-card-nav-btn">▶ Go</button>
+    <button class="tsc-btn icon-only" id="trail-card-elev-btn" title="Elevation profile">📈</button>
+    <button class="tsc-btn icon-only" id="trail-card-steps-btn" title="Turn-by-turn">📋</button>
+    <button class="tsc-btn" id="trail-card-edit-btn">✎ Edit</button>
+    <button class="tsc-btn icon-only" id="trail-card-save-btn" title="Save route">💾</button>
+    <button class="tsc-btn icon-only" id="trail-card-library-btn" title="Saved routes">📚</button>
+    <button class="tsc-btn danger icon-only" id="trail-card-clear-btn" title="Clear route">✕</button>
+    <button class="tsc-btn primary icon-only" id="trail-card-nav-btn" title="Start navigation">▶</button>
+  </div>
+  <!-- Inline elevation — shown when 📈 toggled -->
+  <div id="tsc-elev-inline">
+    <div id="tsc-elev-wrap">
+      <canvas id="tsc-elev-canvas"></canvas>
+      <div id="tsc-elev-tooltip"></div>
+      <div id="tsc-elev-loading"><div class="elev-spin"></div> Loading elevation…</div>
+    </div>
   </div>
 </div>
 
@@ -1619,18 +1720,11 @@ body.has-elev-panel #trail-summary-card { bottom: 230px; }
 
 <!-- Elevation Profile Panel -->
 <div id="elev-panel">
-  <div id="elev-panel-header">
-    <span id="elev-panel-title">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-10 5 6 3-4 5 8"/></svg>
-      Elevation Profile
-    </span>
-    <span id="elev-panel-stats">—</span>
-    <button id="elev-panel-close" title="Close">✕</button>
-  </div>
+  <button id="elev-panel-close" title="Close">✕</button>
   <div id="elev-chart-wrap">
     <canvas id="elev-canvas"></canvas>
     <div id="elev-tooltip"></div>
-    <div id="elev-loading"><div class="elev-spin"></div> Loading elevation data…</div>
+    <div id="elev-loading"><div class="elev-spin"></div> Loading elevation…</div>
   </div>
 </div>
 
@@ -2559,7 +2653,7 @@ function onNavGPSUpdate(pos) {
 function haversineM(lat1, lng1, lat2, lng2) {
   const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180; // Fixed: lng2 - lng1
+  const dLng = (lng2 - lng1) * Math.PI / 180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
@@ -2584,9 +2678,9 @@ document.getElementById('nav-stop-btn').addEventListener('click', () => {
   if (navSource === 'trail') {
     // Repopulate trail card from current state
     recalcTrailTotals();
+    document.getElementById('tsc-route-name').textContent = document.getElementById('trail-name-input').value.trim() || defaultRouteName();
     document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
     document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
-    document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
     document.getElementById('trail-summary-card').classList.add('show');
   } else {
     document.getElementById('route-summary-card').classList.add('show');
@@ -2622,6 +2716,7 @@ document.addEventListener('keydown', e => {
 
 const trailState = {
   isActive: false,
+  isLocked: false,  // true when route is finished and Edit has not been pressed
   waypoints: [],
   segments: [],
   totalDist: 0,
@@ -2668,6 +2763,10 @@ function closeTrailPanel(force) {
   document.body.classList.remove('trail-mode');
   setWpListOpen(false);
   hideHint();
+  // Hide mini elevation when panel closes
+  document.getElementById('trail-mini-elev')?.classList.remove('visible');
+  document.getElementById('trail-panel').classList.remove('has-mini-elev');
+  clearTimeout(miniElevBuildTimer);
   // If route is still present but panel is closing (shouldn't normally be here), clear
   if (!force && trailState.waypoints.length > 0) {
     document.getElementById('trail-summary-card').classList.remove('show');
@@ -2980,6 +3079,8 @@ function updateTrailUI() {
   document.getElementById('trail-finish-btn').disabled = n < 2;
   updateTrailStats();
   renderTrailWaypointList();
+  // Schedule mini elevation rebuild after waypoints change
+  scheduleMiniElevationBuild();
 }
 
 function renderTrailWaypointList() {
@@ -3033,7 +3134,9 @@ function clearTrailRouteInternal() {
   trailState.totalDist = 0;
   trailState.totalTime = 0;
   trailState._saved = false;
+  trailState.isLocked = false;
   document.getElementById('trail-summary-card').classList.remove('show');
+  document.getElementById('trail-summary-card').classList.remove('elev-open');
   document.getElementById('instructions-panel').classList.remove('open');
   setWpListOpen(false);
   updateTrailUI();
@@ -3053,11 +3156,21 @@ function clearTrailRoute() {
 document.getElementById('trail-finish-btn').addEventListener('click', () => {
   if (trailState.waypoints.length < 2) return;
   recalcTrailTotals();
+
+  // Lock all waypoint markers (disable dragging)
+  trailState.isLocked = true;
+  trailState.waypoints.forEach(wp => {
+    if (wp.marker && wp.marker.dragging) wp.marker.dragging.disable();
+  });
+
+  // Update compact summary card
+  const routeName = document.getElementById('trail-name-input').value.trim() || defaultRouteName();
+  document.getElementById('tsc-route-name').textContent = routeName;
   document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
   document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
-  document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
   document.getElementById('trail-summary-card').classList.add('show');
-  closeTrailPanel(true); // force close without warning — route is still accessible in summary
+
+  closeTrailPanel(true); // force close without warning — route still accessible in summary
   hideHint();
   saveDraft();
   toast('Route complete! 🥾');
@@ -3073,15 +3186,29 @@ document.getElementById('trail-finish-btn').addEventListener('click', () => {
     }
   } catch(e) {}
 
-  // Build elevation profile asynchronously
-  closeElevationPanel();
-  buildElevationProfile();
+  // Pre-fetch elevation data so 📈 opens instantly
+  elevState.points = [];
+  elevState.totalDist = 0;
+  buildElevationProfile(); // silent — no panel shown
 });
 
 // Trail summary card actions
 document.getElementById('trail-card-edit-btn').addEventListener('click', () => {
+  // Unlock all waypoint markers
+  trailState.isLocked = false;
+  trailState.waypoints.forEach(wp => {
+    if (wp.marker && wp.marker.dragging) wp.marker.dragging.enable();
+  });
   document.getElementById('trail-summary-card').classList.remove('show');
   openTrailPanel();
+});
+document.getElementById('trail-card-elev-btn').addEventListener('click', () => {
+  const card = document.getElementById('trail-summary-card');
+  if (card.classList.contains('elev-open')) {
+    card.classList.remove('elev-open');
+  } else {
+    showInlineElevation();
+  }
 });
 document.getElementById('trail-card-clear-btn').addEventListener('click', () => {
   document.getElementById('trail-summary-card').classList.remove('show');
@@ -3557,6 +3684,7 @@ async function restoreRouteData(data) {
   if (data.name) document.getElementById('trail-name-input').value = data.name;
   // Mark as saved if loaded from library (not a draft)
   if (!data.isDraft) trailState._saved = true;
+  if (data.name) trailState._libraryName = data.name;
   toast('Restoring route…', 5000);
   for (let i = 0; i < data.waypoints.length; i++) {
     const wp = data.waypoints[i];
@@ -3567,9 +3695,13 @@ async function restoreRouteData(data) {
 
   // Finish the route, fit bounds, and build elevation profile
   recalcTrailTotals();
+  const rName = trailState._libraryName || defaultRouteName();
+  document.getElementById('tsc-route-name').textContent = rName;
   document.getElementById('tsc-dist').textContent = fmtDist(trailState.totalDist);
   document.getElementById('tsc-time').textContent = fmtTime(trailState.totalTime);
-  document.getElementById('tsc-pts').textContent  = `${trailState.waypoints.length} pts`;
+  // Lock markers (loaded route is in finished state)
+  trailState.isLocked = true;
+  trailState.waypoints.forEach(wp => { if (wp.marker && wp.marker.dragging) wp.marker.dragging.disable(); });
   document.getElementById('trail-summary-card').classList.add('show');
   closeTrailPanel(true);
 
@@ -3807,187 +3939,227 @@ function closeElevationPanel() {
 
 document.getElementById('elev-panel-close').addEventListener('click', closeElevationPanel);
 
-async function buildElevationProfile(route) {
-  const loading = document.getElementById('elev-loading');
-  const stats = document.getElementById('elev-panel-stats');
-  loading.style.display = 'flex';
-  loading.innerHTML = '<div class="elev-spin"></div>';
+async function buildElevationProfile(showPanel = false) {
+  // 1. Extract full routed path from all trail segments
+  const rawPath = [];
+  trailState.segments.forEach(seg => {
+    const coords = seg.routingCtrl?._routes?.[0]?.coordinates || [];
+    coords.forEach(c => rawPath.push([c.lat, c.lng]));
+  });
+  if (rawPath.length < 2) return;
+
+  // 2. Uniform sample to ≤500 points (reasonable for performance & API)
+  const MAX_SAMPLES = 500;
+  const stepSize = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
+  const sampled = [];
+  for (let i = 0; i < rawPath.length; i += stepSize) sampled.push(rawPath[i]);
+  if (sampled[sampled.length - 1] !== rawPath[rawPath.length - 1]) sampled.push(rawPath[rawPath.length - 1]);
+
+  // 3. Compute cumulative distances
+  let cumDist = 0;
+  const sampledPts = sampled.map((p, i) => {
+    if (i > 0) cumDist += haversineM(sampled[i-1][0], sampled[i-1][1], p[0], p[1]);
+    return { lat: p[0], lng: p[1], dist: cumDist };
+  });
+
+  // 4. Show full panel in loading state only if requested
+  const panel = document.getElementById('elev-panel');
+  const loadingEl = document.getElementById('elev-loading');
+  loadingEl.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
+  if (showPanel) {
+    loadingEl.style.display = 'flex';
+    panel.classList.add('show');
+    document.body.classList.add('has-elev-panel');
+  }
 
   try {
-    const raw = (route.path && route.path.length >= 2) ? route.path : route.waypoints.map(w => w.latlng);
-    let totalD = 0;
-    let sampled = [{ lat: raw[0][0] || raw[0].lat, lng: raw[0][1] || raw[0].lng, dist: 0 }];
+    // 5. Open-Elevation API — SRTM30m data, free, CORS-enabled, no key needed
+    const locations = sampledPts.map(p => ({ latitude: p.lat, longitude: p.lng }));
+    const resp = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locations })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
 
-    for (let i = 1; i < raw.length; i++) {
-      const p1 = raw[i-1], p2 = raw[i];
-      const lat1 = p1[0]||p1.lat, lng1 = p1[1]||p1.lng, lat2 = p2[0]||p2.lat, lng2 = p2[1]||p2.lng;
-      totalD += haversineM(lat1, lng1, lat2, lng2);
-      if (i % Math.max(1, Math.floor(raw.length/100)) === 0 || i === raw.length-1) {
-        sampled.push({ lat: lat2, lng: lng2, dist: totalD });
-      }
+    const results = data.results;
+    if (!Array.isArray(results) || results.length === 0) throw new Error('No elevation data');
+
+    results.forEach((r, i) => { if (i < sampledPts.length) sampledPts[i].ele = r.elevation; });
+
+    elevState.points    = sampledPts.filter(p => typeof p.ele === 'number');
+    elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
+    const allEles       = elevState.points.map(p => p.ele);
+    elevState.minEle    = Math.min(...allEles);
+    elevState.maxEle    = Math.max(...allEles);
+
+    // Elevation gain
+    let gain = 0;
+    for (let i = 1; i < elevState.points.length; i++) {
+      const d = elevState.points[i].ele - elevState.points[i-1].ele;
+      if (d > 0) gain += d;
+    }
+    elevState.gain = Math.round(gain);
+
+    loadingEl.style.display = 'none';
+
+    // Draw full panel chart if requested; caller handles mini canvas separately
+    if (showPanel) {
+      requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
     }
 
-    const lats = sampled.map(p => p.lat.toFixed(5)).join(',');
-    const lngs = sampled.map(p => p.lng.toFixed(5)).join(',');
-    const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`);
-    const data = await res.json();
-
-    sampled.forEach((p, i) => p.ele = data.elevation[i] || 0);
-    elevState.points = sampled;
-    elevState.totalDist = totalD;
-    
-    const eles = sampled.map(p => p.ele);
-    elevState.minEle = Math.min(...eles);
-    elevState.maxEle = Math.max(...eles);
-
-    loading.style.display = 'none'; // CRITICAL: This breaks the loop
-    stats.textContent = `↑ ${Math.round(elevState.maxEle - elevState.minEle)}m range · ${(totalD/1000).toFixed(2)} km`;
-    
-    drawElevationChart();
-    setupElevationScrubber();
-  } catch(e) {
-    loading.innerHTML = '⚠ Elevation Unavailable';
-    console.error(e);
+  } catch(err) {
+    if (showPanel) {
+      loadingEl.innerHTML = '⚠ Elevation unavailable';
+      loadingEl.style.display = 'flex';
+    }
+    console.warn('Elevation fetch error:', err);
   }
 }
 
-function drawElevationChart(scrubFrac = -1) {
-  const canvas = document.getElementById('elev-canvas');
-  const wrap = document.getElementById('elev-chart-wrap');
+function drawElevationChart(scrubFrac = -1, canvasEl, wrapEl, tooltipEl) {
+  const canvas = canvasEl || document.getElementById('elev-canvas');
+  const wrap   = wrapEl   || document.getElementById('elev-chart-wrap');
   if (!canvas || !wrap || elevState.points.length < 2) return;
-
   const dpr = window.devicePixelRatio || 1;
   const W = wrap.clientWidth, H = wrap.clientHeight;
-  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const pts = elevState.points;
+  const pts    = elevState.points;
   const totalD = elevState.totalDist || 1;
 
-  // Vertical padding so line isn't clipped at top/bottom
-  const pad = 8;
-  const range = elevState.maxEle - elevState.minEle || 1;
-  const minE = elevState.minEle - range * 0.12;
-  const maxE = elevState.maxEle + range * 0.12;
+  // Layout: left margin for Y labels, bottom margin for distance ticks
+  const ML = 36, MB = 16, MT = 4, MR = 28;
+  const CW = W - ML - MR, CH = H - MB - MT;  // chart area
 
-  function xOf(i) { return (pts[i].dist / totalD) * W; }
-  function yOf(i) { return H - pad - ((pts[i].ele - minE) / (maxE - minE)) * (H - pad * 2); }
+  const range  = elevState.maxEle - elevState.minEle || 1;
+  const minE   = elevState.minEle - range * 0.08;
+  const maxE   = elevState.maxEle + range * 0.08;
 
-  // ── Background ──────────────────────────────────────────
+  function xOf(i) { return ML + (pts[i].dist / totalD) * CW; }
+  function yOf(i) { return MT + CH - ((pts[i].ele - minE) / (maxE - minE)) * CH; }
+  function xOfFrac(f) { return ML + f * CW; }
+
   ctx.clearRect(0, 0, W, H);
 
-  // ── Gradient fill under profile curve ───────────────────
-  const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, 'rgba(22,163,74,0.38)');
-  grad.addColorStop(0.7, 'rgba(22,163,74,0.08)');
-  grad.addColorStop(1, 'rgba(22,163,74,0.0)');
+  // ── Subtle grid lines ────────────────────────────────────
+  ctx.strokeStyle = 'rgba(228,230,239,0.8)';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([2, 3]);
+  [0.25, 0.5, 0.75].forEach(f => {
+    const y = MT + f * CH;
+    ctx.beginPath(); ctx.moveTo(ML, y); ctx.lineTo(ML + CW, y); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // ── Gradient fill under profile ──────────────────────────
+  const grad = ctx.createLinearGradient(0, MT, 0, MT + CH);
+  grad.addColorStop(0,   'rgba(22,163,74,0.32)');
+  grad.addColorStop(0.6, 'rgba(22,163,74,0.08)');
+  grad.addColorStop(1,   'rgba(22,163,74,0.0)');
 
   ctx.beginPath();
-  ctx.moveTo(xOf(0), H);
+  ctx.moveTo(xOf(0), MT + CH);
   pts.forEach((_, i) => ctx.lineTo(xOf(i), yOf(i)));
-  ctx.lineTo(xOf(pts.length - 1), H);
+  ctx.lineTo(xOf(pts.length - 1), MT + CH);
   ctx.closePath();
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // ── Profile line ────────────────────────────────────────
+  // ── Profile line ─────────────────────────────────────────
   ctx.beginPath();
   pts.forEach((_, i) => i === 0 ? ctx.moveTo(xOf(i), yOf(i)) : ctx.lineTo(xOf(i), yOf(i)));
   ctx.strokeStyle = '#16a34a';
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.setLineDash([]);
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
   ctx.stroke();
 
-  // ── Km tick marks along bottom ───────────────────────────
+  // ── Y-axis labels (min / max elevation) ─────────────────
+  ctx.font      = `600 9px Figtree, sans-serif`;
+  ctx.fillStyle = 'rgba(107,114,128,0.85)';
+  ctx.textAlign = 'right';
+  ctx.fillText(Math.round(elevState.maxEle) + 'm', ML - 3, MT + 9);
+  ctx.fillText(Math.round(elevState.minEle) + 'm', ML - 3, MT + CH);
+
+  // ── Gain chip (top-right of chart area) ──────────────────
+  const gainTxt = '↑ ' + elevState.gain + 'm';
+  ctx.font      = `700 9.5px Figtree, sans-serif`;
+  const gtW     = ctx.measureText(gainTxt).width;
+  const chipX   = ML + CW - gtW - 10, chipY = MT + 3;
+  ctx.fillStyle = 'rgba(22,163,74,0.13)';
+  ctx.beginPath();
+  ctx.roundRect(chipX - 4, chipY, gtW + 8, 14, 6);
+  ctx.fill();
+  ctx.fillStyle = '#15803d';
+  ctx.textAlign = 'left';
+  ctx.fillText(gainTxt, chipX, chipY + 10);
+
+  // ── Distance ticks along the bottom ──────────────────────
   const totalKm = totalD / 1000;
-  const tickInterval = totalKm <= 5 ? 1 : totalKm <= 20 ? 5 : totalKm <= 50 ? 10 : 25;
-  ctx.font = `bold ${9 * dpr / dpr}px Figtree, sans-serif`;
-  ctx.fillStyle = 'rgba(107,114,128,0.7)';
+  const tickInterval = totalKm <= 3 ? 0.5 : totalKm <= 8 ? 1 : totalKm <= 20 ? 5 : totalKm <= 50 ? 10 : 25;
+  ctx.font      = `600 8.5px Figtree, sans-serif`;
+  ctx.fillStyle = 'rgba(156,163,175,0.9)';
   ctx.textAlign = 'center';
-  for (let km = tickInterval; km < totalKm - tickInterval * 0.5; km += tickInterval) {
-    const tx = (km / totalKm) * W;
-    ctx.fillRect(tx - 0.5, H - 3, 1, 3);
-    ctx.fillText(km + 'km', tx, H - 4);
+  for (let km = tickInterval; km < totalKm - tickInterval * 0.4; km += tickInterval) {
+    const tx = xOfFrac(km / totalKm);
+    ctx.fillStyle = 'rgba(228,230,239,0.9)';
+    ctx.fillRect(tx - 0.5, MT + CH + 1, 1, 4);
+    ctx.fillStyle = 'rgba(156,163,175,0.9)';
+    ctx.fillText(km + 'k', tx, H - 2);
   }
 
   // ── Scrubber ─────────────────────────────────────────────
   if (scrubFrac >= 0) {
-    const sx = scrubFrac * W;
-    // Find nearest point
+    const sx = xOfFrac(scrubFrac);
     const targetDist = scrubFrac * totalD;
     const nearIdx = pts.reduce((best, p, i) =>
       Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
     const sy = yOf(nearIdx);
 
-    // Vertical dashed line
     ctx.beginPath();
-    ctx.moveTo(sx, 0); ctx.lineTo(sx, H);
-    ctx.strokeStyle = 'rgba(37,99,235,0.5)';
-    ctx.lineWidth = 1.5;
+    ctx.moveTo(sx, MT); ctx.lineTo(sx, MT + CH);
+    ctx.strokeStyle = 'rgba(37,99,235,0.45)';
+    ctx.lineWidth   = 1.5;
     ctx.setLineDash([4, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Dot on profile line
     ctx.beginPath();
-    ctx.arc(sx, sy, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#2563eb';
+    ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle   = '#2563eb';
     ctx.fill();
     ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
+    ctx.lineWidth   = 2;
     ctx.stroke();
   }
 }
 
-let elevScrubActive = false;
+function setupElevationScrubber(wrapEl, canvasEl, tooltipEl) {
+  const wrap    = wrapEl   || document.getElementById('elev-chart-wrap');
+  let canvas    = canvasEl || document.getElementById('elev-canvas');
+  const tooltip = tooltipEl|| document.getElementById('elev-tooltip');
+  let animFrame = null;
+  // Whether this is the mini scrubber (don't pass scrubFrac to main chart)
+  const isMini = !!canvasEl;
 
-function setupElevationScrubber() {
-  const canvas = document.getElementById('elev-canvas');
-  if (!canvas) return;
-
-  canvas.onmousemove = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const frac = Math.max(0, Math.min(1, x / rect.width));
-    
-    const targetDist = frac * elevState.totalDist;
-    const pts = elevState.points;
-    const nearIdx = pts.reduce((best, p, i) => 
-      Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
-    
-    const pt = pts[nearIdx];
-    const scrubber = document.getElementById('elev-scrubber');
-    const tooltip = document.getElementById('elev-tooltip');
-
-    scrubber.style.left = (frac * 100) + '%';
-    scrubber.style.display = 'block';
-    
-    tooltip.style.left = x + 'px';
-    tooltip.style.display = 'block';
-    tooltip.innerHTML = `<strong>${Math.round(pt.ele)}m</strong><br>${(pt.dist / 1000).toFixed(2)} km`;
-
-    if (window.scrubMarker) window.scrubMarker.setLatLng([pt.lat, pt.lng]);
-    else window.scrubMarker = L.circleMarker([pt.lat, pt.lng], {radius:6, color:'#2563eb', fillColor:'#fff', fillOpacity:1}).addTo(map);
-  };
-
-  canvas.onmouseleave = () => {
-    document.getElementById('elev-scrubber').style.display = 'none';
-    document.getElementById('elev-tooltip').style.display = 'none';
-    if (window.scrubMarker) { map.removeLayer(window.scrubMarker); window.scrubMarker = null; }
-  };
-}
+  // Layout constants must match drawElevationChart
+  const ML = 36, MB = 16, MT = 4, MR = 28;
 
   function getScrubFrac(clientX) {
     const rect = canvas.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const chartLeft  = rect.left  + (ML / rect.width)  * rect.width;
+    const chartRight = rect.right - (MR / rect.width)  * rect.width;
+    return Math.max(0, Math.min(1, (clientX - chartLeft) / (chartRight - chartLeft)));
   }
 
   function doScrub(clientX) {
     const frac = getScrubFrac(clientX);
-    const pts = elevState.points;
+    const pts  = elevState.points;
     if (!pts.length) return;
 
     const targetDist = frac * elevState.totalDist;
@@ -3995,7 +4167,7 @@ function setupElevationScrubber() {
       Math.abs(p.dist - targetDist) < Math.abs(pts[best].dist - targetDist) ? i : best, 0);
     const pt = pts[nearIdx];
 
-    // Move / create scrub marker on map (no pan — just move the pin)
+    // Move / create scrub marker on map
     if (!elevState.scrubMarker) {
       elevState.scrubMarker = L.marker([pt.lat, pt.lng], {
         icon: L.divIcon({
@@ -4009,44 +4181,148 @@ function setupElevationScrubber() {
       elevState.scrubMarker.setLatLng([pt.lat, pt.lng]);
     }
 
-    // Tooltip
-    const rect = canvas.getBoundingClientRect();
-    const sx = frac * rect.width;
-    const kmStr = (pt.dist / 1000).toFixed(1) + ' km';
-    const eleStr = Math.round(pt.ele) + 'm';
-    tooltip.textContent = `${kmStr} · ${eleStr}`;
-    // Clamp tooltip so it doesn't overflow edges
-    const tw = 90; // approx tooltip width
-    const left = Math.max(tw/2, Math.min(rect.width - tw/2, sx));
-    tooltip.style.left = left + 'px';
+    // Position tooltip above cursor within the chart area
+    const rect    = canvas.getBoundingClientRect();
+    const CW      = rect.width - ML - MR;
+    const sx      = ML + frac * CW;  // pixel position within canvas element
+    const halfTW  = 50;
+    const left    = Math.max(ML + halfTW, Math.min(rect.width - MR - halfTW, sx));
+    const kmStr   = (targetDist / 1000).toFixed(1) + ' km';
+    const eleStr  = Math.round(pt.ele) + 'm';
+    tooltip.textContent  = `${kmStr} · ${eleStr}`;
+    tooltip.style.left   = left + 'px';
     tooltip.style.display = 'block';
 
-    // Redraw with scrubber
     if (animFrame) cancelAnimationFrame(animFrame);
-    animFrame = requestAnimationFrame(() => drawElevationChart(frac));
+    animFrame = requestAnimationFrame(() => drawElevationChart(frac, isMini ? canvas : null, isMini ? wrap : null, isMini ? tooltip : null));
   }
 
   function endScrub() {
     tooltip.style.display = 'none';
     if (elevState.scrubMarker) { map.removeLayer(elevState.scrubMarker); elevState.scrubMarker = null; }
     if (animFrame) cancelAnimationFrame(animFrame);
-    drawElevationChart();
+    drawElevationChart(-1, isMini ? canvas : null, isMini ? wrap : null, isMini ? tooltip : null);
   }
 
-  // Remove old listeners by cloning
+  // Replace canvas to clear old listeners
   const newCanvas = canvas.cloneNode(true);
   canvas.parentNode.replaceChild(newCanvas, canvas);
+  canvas = newCanvas;  // update local ref
 
-  newCanvas.addEventListener('mousemove', e => doScrub(e.clientX));
-  newCanvas.addEventListener('mouseleave', endScrub);
-  newCanvas.addEventListener('touchstart', e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
-  newCanvas.addEventListener('touchmove',  e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
-  newCanvas.addEventListener('touchend',   endScrub);
+  canvas.addEventListener('mousemove', e => doScrub(e.clientX));
+  canvas.addEventListener('mouseleave', endScrub);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); doScrub(e.touches[0].clientX); }, { passive: false });
+  canvas.addEventListener('touchend', endScrub);
+}
+
+// ─── MINI ELEVATION (in planning mode) ───────────────────────
+let miniElevBuildTimer = null;
+let elevFetchGen = 0; // incremented each time we start a fresh fetch
+
+function showMiniElevation() {
+  const el = document.getElementById('trail-mini-elev');
+  if (!el) return;
+  if (trailState.waypoints.length < 2) {
+    el.classList.remove('visible');
+    document.getElementById('trail-panel').classList.remove('has-mini-elev');
+    return;
+  }
+  el.classList.add('visible');
+  document.getElementById('trail-panel').classList.add('has-mini-elev');
+
+  const canvas  = document.getElementById('trail-mini-elev-canvas');
+  const wrap    = document.getElementById('trail-mini-elev-wrap');
+  const tooltip = document.getElementById('trail-mini-elev-tooltip');
+  const loading = document.getElementById('trail-mini-elev-loading');
+
+  // If we already have valid elevation data, just redraw immediately
+  if (elevState.points.length >= 2) {
+    loading.style.display = 'none';
+    requestAnimationFrame(() => {
+      drawElevationChart(-1, canvas, wrap, tooltip);
+      setupElevationScrubber(wrap, canvas, tooltip);
+    });
+    return;
+  }
+
+  // Start a fresh fetch
+  const myGen = ++elevFetchGen;
+  loading.innerHTML = '<div class="elev-spin"></div> Loading…';
+  loading.style.display = 'flex';
+
+  buildElevationProfile().then(() => {
+    if (elevFetchGen !== myGen) return; // stale — a newer fetch is running
+    loading.style.display = 'none';
+    requestAnimationFrame(() => {
+      drawElevationChart(-1, canvas, wrap, tooltip);
+      setupElevationScrubber(wrap, canvas, tooltip);
+    });
+  }).catch(() => {
+    if (elevFetchGen !== myGen) return;
+    loading.innerHTML = '⚠ Unavailable';
+  });
+}
+
+function scheduleMiniElevationBuild() {
+  clearTimeout(miniElevBuildTimer);
+  if (trailState.waypoints.length < 2) {
+    document.getElementById('trail-mini-elev')?.classList.remove('visible');
+    document.getElementById('trail-panel').classList.remove('has-mini-elev');
+    return;
+  }
+  // Debounce: wait 1.6s after last change before fetching fresh elevation
+  miniElevBuildTimer = setTimeout(() => {
+    // Invalidate old data so we always fetch fresh for the current route
+    elevState.points = [];
+    elevState.totalDist = 0;
+    showMiniElevation();
+  }, 1600);
+}
+
+// ─── INLINE ELEVATION inside the summary card ─────────────────
+let tscElevFetchGen = 0;
+
+function showInlineElevation() {
+  const card    = document.getElementById('trail-summary-card');
+  const canvas  = document.getElementById('tsc-elev-canvas');
+  const wrap    = document.getElementById('tsc-elev-wrap');
+  const tooltip = document.getElementById('tsc-elev-tooltip');
+  const loading = document.getElementById('tsc-elev-loading');
+  if (!canvas) return;
+
+  card.classList.add('elev-open');
+
+  // Reuse elevState data if available
+  if (elevState.points.length >= 2) {
+    loading.style.display = 'none';
+    requestAnimationFrame(() => {
+      drawElevationChart(-1, canvas, wrap, tooltip);
+      setupElevationScrubber(wrap, canvas, tooltip);
+    });
+    return;
+  }
+
+  // Fetch fresh
+  const myGen = ++tscElevFetchGen;
+  loading.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
+  loading.style.display = 'flex';
+
+  buildElevationProfile().then(() => {
+    if (tscElevFetchGen !== myGen) return;
+    loading.style.display = 'none';
+    requestAnimationFrame(() => {
+      drawElevationChart(-1, canvas, wrap, tooltip);
+      setupElevationScrubber(wrap, canvas, tooltip);
+    });
+  }).catch(() => {
+    if (tscElevFetchGen !== myGen) return;
+    loading.innerHTML = '⚠ Elevation unavailable';
+  });
 }
 
 // Also rebuild elevation profile when a route is loaded from the library
-// (injected into restoreRouteData below via a hook)
-const _origRestoreRouteData = window.__restoreRouteDataHook;
+// (handled directly in restoreRouteData)
 
 // ════════════════════════════════════════════════════════════
 // LOADER
