@@ -90,6 +90,104 @@ body.trail-mode #map { cursor: crosshair; }
 .leaflet-popup-tip-container { display: none; }
 .leaflet-popup-close-button { display: none !important; }
 
+/* ─── RIGHT-CLICK CONTEXT MENU (Leaflet popup, moves with map) ─── */
+/* Override the popup wrapper for ctx-popup class specifically */
+.ctx-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1.5px solid var(--border) !important;
+  overflow: hidden;
+  min-width: 170px;
+}
+.ctx-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+.ctx-popup-content {
+  display: flex; flex-direction: column;
+  font-family: var(--font);
+}
+.ctx-popup-header {
+  display: flex; align-items: center;
+  padding: 6px 9px 5px 11px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg); gap: 5px;
+}
+.ctx-popup-label {
+  flex: 1; font-size: 9px; font-weight: 700;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px;
+}
+.ctx-popup-close {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 10px; line-height: 1;
+  transition: background var(--tr), color var(--tr); flex-shrink: 0;
+  padding: 0;
+}
+.ctx-popup-close:hover { background: var(--border); color: var(--text-primary); }
+.ctx-popup-items { display: flex; flex-direction: column; gap: 1px; padding: 3px 3px 3px; }
+.ctx-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  border: none; background: transparent; cursor: pointer;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  color: var(--text-primary); text-align: left; width: 100%;
+  transition: background var(--tr), color var(--tr); white-space: nowrap;
+}
+.ctx-item .ctx-icon { font-size: 13px; line-height: 1; flex-shrink: 0; }
+.ctx-item:hover { background: var(--blue-light); color: var(--blue); }
+.ctx-separator { height: 1px; background: var(--border-light); margin: 2px 3px; }
+
+/* ─── MEASUREMENT TOOL ─── */
+#measure-bar {
+  position: fixed;
+  bottom: 80px; right: 16px;
+  z-index: 950;
+  background: var(--white);
+  border: 1.5px solid var(--orange);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font);
+  animation: slideUp 0.2s ease;
+}
+#measure-bar.show { display: flex; }
+@keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+#measure-icon { font-size: 18px; }
+#measure-info { flex: 1; }
+#measure-total { font-size: 15px; font-weight: 700; color: var(--orange); }
+#measure-hint { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+#measure-clear-btn {
+  padding: 6px 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--border); background: transparent;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; color: var(--text-secondary); transition: all var(--tr);
+}
+#measure-clear-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+body.measure-mode #map { cursor: crosshair !important; }
+
+/* Measurement distance labels on map */
+.measure-label {
+  background: rgba(217, 119, 6, 0.92);
+  color: white;
+  border-radius: 8px;
+  padding: 2px 7px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+
 /* ─── TOP SEARCH BAR ─── */
 #search-bar {
   position: fixed;
@@ -385,9 +483,9 @@ body.trail-mode #map { cursor: crosshair; }
   display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
 }
 #rsc-profile { font-size: 18px; flex-shrink: 0; }
-#rsc-time { font-size: 15px; font-weight: 700; color: var(--text-primary); }
-.rsc-sep { color: var(--text-muted); font-size: 14px; }
-#rsc-dist { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+#rsc-time { font-size: 19px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
+.rsc-sep { color: var(--text-muted); font-size: 13px; }
+#rsc-dist { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
 #rsc-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .rsc-btn {
   padding: 7px 12px; border-radius: var(--radius-full);
@@ -747,9 +845,9 @@ body.trail-mode #map { cursor: crosshair; }
   display: flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
 #tsc-icon { font-size: 16px; }
-#tsc-dist { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+#tsc-dist { font-size: 19px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
 .tsc-sep { color: var(--text-muted); font-size: 13px; }
-#tsc-time { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+#tsc-time { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
 #tsc-pts  { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
 /* divider */
@@ -1180,7 +1278,7 @@ body.trail-mode #map { cursor: crosshair; }
   width: 100%;
   display: none;
   flex-direction: column;
-  margin-top: 4px;
+  margin-top: 0;
 }
 #trail-summary-card.elev-open #tsc-elev-inline { display: flex; }
 #tsc-elev-wrap {
@@ -1208,18 +1306,21 @@ body.trail-mode #map { cursor: crosshair; }
 /* ─── COMPACT TRAIL SUMMARY CARD ─── */
 #trail-summary-card {
   padding: 7px 8px 7px 12px;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;  /* allows inline elev to drop to second row */
 }
-#tsc-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+#tsc-left { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 #tsc-route-name {
-  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  max-width: 160px;
+  max-width: 160px; text-transform: uppercase; letter-spacing: 0.5px;
 }
-#tsc-stats { display: flex; align-items: center; gap: 5px; }
-#tsc-dist { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-#tsc-time { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+#tsc-stats { display: flex; align-items: baseline; gap: 5px; }
+#tsc-dist {
+  font-size: 19px; font-weight: 700; color: var(--text-primary);
+  letter-spacing: -0.5px; line-height: 1;
+}
+#tsc-time { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
 .tsc-sep  { color: var(--text-muted); font-size: 11px; }
 
 /* Mobile adjustments for elev panel */
@@ -1572,7 +1673,6 @@ body.trail-mode #map { cursor: crosshair; }
     <button class="tsc-btn icon-only" id="trail-card-steps-btn" title="Turn-by-turn">📋</button>
     <button class="tsc-btn" id="trail-card-edit-btn">✎ Edit</button>
     <button class="tsc-btn icon-only" id="trail-card-save-btn" title="Save route">💾</button>
-    <button class="tsc-btn icon-only" id="trail-card-library-btn" title="Saved routes">📚</button>
     <button class="tsc-btn danger icon-only" id="trail-card-clear-btn" title="Clear route">✕</button>
     <button class="tsc-btn primary icon-only" id="trail-card-nav-btn" title="Start navigation">▶</button>
   </div>
@@ -1731,6 +1831,16 @@ body.trail-mode #map { cursor: crosshair; }
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- Measure distance bar -->
+<div id="measure-bar">
+  <span id="measure-icon">📏</span>
+  <div id="measure-info">
+    <div id="measure-total">0 m</div>
+    <div id="measure-hint">Click map to add points · Right-click to stop</div>
+  </div>
+  <button id="measure-clear-btn">&#x2715; Clear</button>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1852,7 +1962,7 @@ const initCenter  = savedCenter || [51.505, -0.09];
 const initZoom    = savedZoom   || 13;
 
 const map = L.map('map', { center: initCenter, zoom: initZoom, zoomControl: false });
-L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.control.zoom({ position: 'topright' }).addTo(map);
 
 // Save position on move
 map.on('moveend zoomend', () => {
@@ -2721,7 +2831,9 @@ const trailState = {
   segments: [],
   totalDist: 0,
   totalTime: 0,
-  profile: 'foot'
+  profile: 'foot',
+  _isRestoring: false,  // true while restoreRouteData is rebuilding from library — suppresses saveDraft
+  _isDirty: false,      // true once user has made any edit; false when freshly loaded from library
 };
 
 let trailRoutingInProgress = false;
@@ -2917,6 +3029,7 @@ function makeTrailWaypointMarker(latlng, index) {
     const ll = marker.getLatLng();
     trailState.waypoints[idx].latlng = [ll.lat, ll.lng];
     trailState.waypoints[idx].name = `${ll.lat.toFixed(4)}, ${ll.lng.toFixed(4)}`;
+    trailState._isDirty = true;
     nominatimReverse(ll.lat, ll.lng).then(r => {
       if (r) {
         const name = r.name || (r.display_name || '').split(',')[0].trim();
@@ -2985,6 +3098,7 @@ async function removeTrailWaypoint(index) {
   refreshTrailMarkerIcons();
   recalcTrailTotals();
   updateTrailUI();
+  trailState._isDirty = true;
   toast('Point removed');
 }
 
@@ -3017,6 +3131,7 @@ async function insertTrailWaypoint(insertAt, latlng) {
   trailRoutingInProgress = false;
   recalcTrailTotals();
   updateTrailUI();
+  trailState._isDirty = true;
   saveDraft();
   toast('Waypoint inserted ✓');
   nominatimReverse(lat, lng).then(r => {
@@ -3037,6 +3152,9 @@ async function handleTrailClick(latlng) {
     const addedIdx = trailState.waypoints.findIndex(w => w.latlng[0] === lat && w.latlng[1] === lng && w.name === name);
     if (addedIdx >= 0) { trailState.waypoints[addedIdx].name = n; renderTrailWaypointList(); }
   }).catch(() => {});
+
+  // Mark dirty only if this click comes from the user (not from restoreRouteData)
+  if (!trailState._isRestoring) trailState._isDirty = true;
 
   const prevCount = trailState.waypoints.length;
   const marker = makeTrailWaypointMarker([lat, lng], prevCount);
@@ -3134,6 +3252,8 @@ function clearTrailRouteInternal() {
   trailState.totalDist = 0;
   trailState.totalTime = 0;
   trailState._saved = false;
+  trailState._isDirty = false;
+  trailState._isRestoring = false;
   trailState.isLocked = false;
   document.getElementById('trail-summary-card').classList.remove('show');
   document.getElementById('trail-summary-card').classList.remove('elev-open');
@@ -3370,6 +3490,15 @@ function saveGPX(mode, routeName) {
 }
 
 
+const measureState = {
+  active: false,
+  points: [],        // [{lat, lng}]
+  polylines: [],     // L.polyline for each segment
+  labels: [],        // L.marker for distance labels
+  startMarker: null, // L.marker for the origin dot
+  totalDist: 0
+};
+
 // MAP CLICK — unified handler
 // ════════════════════════════════════════════════════════════
 
@@ -3378,6 +3507,9 @@ map.on('click', async e => {
     handleTrailClick(e.latlng);
     return;
   }
+
+  // Measurement mode consumes the click (handled by separate listener below)
+  if (measureState.active) return;
 
   const routePanelOpen = document.getElementById('route-panel').classList.contains('open');
   const routeSummaryVisible = document.getElementById('route-summary-card').classList.contains('show');
@@ -3654,6 +3786,10 @@ function deleteRouteFromLibrary(id) {
 
 // Draft auto-save (overwrites single slot)
 function saveDraft() {
+  // Never save draft while restoring a library route — that would be pointless noise
+  if (trailState._isRestoring) return;
+  // Never save draft for a library-loaded route the user hasn't touched
+  if (!trailState._isDirty) return;
   if (trailState.waypoints.length < 2) return;
   try {
     localStorage.setItem(WF_DRAFT_KEY, JSON.stringify({
@@ -3685,12 +3821,21 @@ async function restoreRouteData(data) {
   // Mark as saved if loaded from library (not a draft)
   if (!data.isDraft) trailState._saved = true;
   if (data.name) trailState._libraryName = data.name;
+  // Suppress draft saving while we rebuild the route from stored waypoints.
+  // _isDirty stays false until the user actually modifies something.
+  trailState._isRestoring = true;
+  trailState._isDirty = false;
   toast('Restoring route…', 5000);
   for (let i = 0; i < data.waypoints.length; i++) {
     const wp = data.waypoints[i];
     await handleTrailClick({ lat: wp.latlng[0], lng: wp.latlng[1] });
     if (i < data.waypoints.length - 1) await new Promise(r => setTimeout(r, 80));
   }
+  // Restore complete — future user edits will mark dirty and save drafts normally
+  trailState._isRestoring = false;
+  // Drafts loaded from the draft slot are still unsaved (dirty) — keep them saveable.
+  // Library routes loaded cleanly are not dirty until the user makes changes.
+  trailState._isDirty = !!data.isDraft;
   toast('Route loaded ✓');
 
   // Finish the route, fit bounds, and build elevation profile
@@ -3910,11 +4055,6 @@ ${trkpts}
 
 // Wire up trail summary card buttons for save/library
 document.getElementById('trail-card-save-btn').addEventListener('click', openSaveModal);
-document.getElementById('trail-card-library-btn').addEventListener('click', () => {
-  document.getElementById('trail-summary-card').classList.remove('show');
-  openRoutesPanel();
-});
-
 // Also keep old trail-card-gpx-btn reference in case anything still points to it
 // (the HTML was replaced above, so this is a no-op guard)
 
@@ -3939,7 +4079,7 @@ function closeElevationPanel() {
 
 document.getElementById('elev-panel-close').addEventListener('click', closeElevationPanel);
 
-async function buildElevationProfile(showPanel = false) {
+async function buildElevationProfile(showPanel = false, onStatus = null) {
   // 1. Extract full routed path from all trail segments
   const rawPath = [];
   trailState.segments.forEach(seg => {
@@ -3948,8 +4088,8 @@ async function buildElevationProfile(showPanel = false) {
   });
   if (rawPath.length < 2) return;
 
-  // 2. Uniform sample to ≤500 points (reasonable for performance & API)
-  const MAX_SAMPLES = 500;
+  // 2. Uniform sample to ≤300 points (works across all three APIs)
+  const MAX_SAMPLES = 300;
   const stepSize = Math.max(1, Math.floor(rawPath.length / MAX_SAMPLES));
   const sampled = [];
   for (let i = 0; i < rawPath.length; i += stepSize) sampled.push(rawPath[i]);
@@ -3965,57 +4105,132 @@ async function buildElevationProfile(showPanel = false) {
   // 4. Show full panel in loading state only if requested
   const panel = document.getElementById('elev-panel');
   const loadingEl = document.getElementById('elev-loading');
-  loadingEl.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
+
+  // Helper to update ALL visible loading indicators
+  function setStatus(html) {
+    if (onStatus) onStatus(html);
+    if (showPanel) { loadingEl.innerHTML = html; loadingEl.style.display = 'flex'; }
+  }
+
   if (showPanel) {
+    loadingEl.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
     loadingEl.style.display = 'flex';
     panel.classList.add('show');
     document.body.classList.add('has-elev-panel');
   }
 
-  try {
-    // 5. Open-Elevation API — SRTM30m data, free, CORS-enabled, no key needed
-    const locations = sampledPts.map(p => ({ latitude: p.lat, longitude: p.lng }));
-    const resp = await fetch('https://api.open-elevation.com/api/v1/lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locations })
-    });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-
-    const results = data.results;
-    if (!Array.isArray(results) || results.length === 0) throw new Error('No elevation data');
-
-    results.forEach((r, i) => { if (i < sampledPts.length) sampledPts[i].ele = r.elevation; });
-
+  // 5. Helper: populate elevState from a results array
+  function populateElevState(elevations) {
+    sampledPts.forEach((p, i) => { if (typeof elevations[i] === 'number') p.ele = elevations[i]; });
     elevState.points    = sampledPts.filter(p => typeof p.ele === 'number');
+    if (elevState.points.length < 2) throw new Error('Insufficient elevation data points');
     elevState.totalDist = sampledPts[sampledPts.length - 1].dist;
     const allEles       = elevState.points.map(p => p.ele);
     elevState.minEle    = Math.min(...allEles);
     elevState.maxEle    = Math.max(...allEles);
-
-    // Elevation gain
     let gain = 0;
     for (let i = 1; i < elevState.points.length; i++) {
       const d = elevState.points[i].ele - elevState.points[i-1].ele;
       if (d > 0) gain += d;
     }
     elevState.gain = Math.round(gain);
-
-    loadingEl.style.display = 'none';
-
-    // Draw full panel chart if requested; caller handles mini canvas separately
-    if (showPanel) {
-      requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
-    }
-
-  } catch(err) {
-    if (showPanel) {
-      loadingEl.innerHTML = '⚠ Elevation unavailable';
-      loadingEl.style.display = 'flex';
-    }
-    console.warn('Elevation fetch error:', err);
   }
+
+  // ── Source A: open-elevation.com (SRTM30m) ──────────────────
+  async function tryOpenElevation() {
+    const locations = sampledPts.map(p => ({ latitude: p.lat, longitude: p.lng }));
+    const resp = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locations }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (!Array.isArray(data.results) || data.results.length === 0) throw new Error('Empty results');
+    return data.results.map(r => r.elevation);
+  }
+
+  // ── Source B: Open-Meteo elevation (Copernicus DEM, very reliable) ──
+  async function tryOpenMeteo() {
+    // Open-Meteo accepts up to ~100 coords per request; batch in chunks of 100
+    const CHUNK = 100;
+    const allEles = [];
+    for (let i = 0; i < sampledPts.length; i += CHUNK) {
+      const chunk = sampledPts.slice(i, i + CHUNK);
+      const lats = chunk.map(p => p.lat.toFixed(6)).join(',');
+      const lngs = chunk.map(p => p.lng.toFixed(6)).join(',');
+      const resp = await fetch(
+        `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (!Array.isArray(data.elevation) || data.elevation.length === 0) throw new Error('Empty elevation array');
+      allEles.push(...data.elevation);
+    }
+    return allEles;
+  }
+
+  // ── Source C: OpenTopoData SRTM90m (batched, paced at 1 req/sec) ──
+  async function tryOpenTopoData() {
+    const CHUNK = 100;
+    const allEles = [];
+    for (let i = 0; i < sampledPts.length; i += CHUNK) {
+      if (i > 0) await new Promise(r => setTimeout(r, 1050)); // rate limit: 1 req/s
+      const chunk = sampledPts.slice(i, i + CHUNK);
+      const locs  = chunk.map(p => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join('|');
+      const resp  = await fetch(
+        `https://api.opentopodata.org/v1/srtm90m?locations=${locs}`,
+        { signal: AbortSignal.timeout(15000) }
+      );
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      if (!Array.isArray(data.results) || data.results.length === 0) throw new Error('Empty results');
+      allEles.push(...data.results.map(r => r.elevation));
+    }
+    return allEles;
+  }
+
+  // ── Try each source in sequence ─────────────────────────────
+  const sources = [
+    { name: 'open-elevation.com',  fn: tryOpenElevation,  label: 'Loading elevation…' },
+    { name: 'Open-Meteo (backup)', fn: tryOpenMeteo,       label: '⚡ Trying backup source…' },
+    { name: 'OpenTopoData',        fn: tryOpenTopoData,    label: '⏳ Trying final source…' },
+  ];
+
+  let lastErr;
+  for (const src of sources) {
+    try {
+      setStatus(`<div class="elev-spin"></div> ${src.label}`);
+      const elevations = await src.fn();
+      populateElevState(elevations);
+      // Success
+      if (showPanel) {
+        loadingEl.style.display = 'none';
+        requestAnimationFrame(() => { drawElevationChart(); setupElevationScrubber(); });
+      }
+      return; // done ✓
+    } catch(err) {
+      lastErr = err;
+      console.warn(`Elevation source "${src.name}" failed:`, err.message);
+    }
+  }
+
+  // All sources failed — show retry UI
+  const retryHtml = `<span style="display:flex;align-items:center;gap:6px;font-size:11px;">
+    ⚠ Elevation unavailable
+    <button id="elev-retry-btn" style="padding:2px 8px;border-radius:var(--radius-full);border:1.5px solid var(--orange);background:transparent;font-family:var(--font);font-size:11px;font-weight:600;color:var(--orange);cursor:pointer;">Retry</button>
+  </span>`;
+  setStatus(retryHtml);
+  if (showPanel) {
+    loadingEl.style.display = 'flex';
+    document.getElementById('elev-retry-btn')?.addEventListener('click', () => {
+      elevState.points = []; elevState.totalDist = 0;
+      buildElevationProfile(true);
+    }, { once: true });
+  }
+  throw lastErr;
 }
 
 function drawElevationChart(scrubFrac = -1, canvasEl, wrapEl, tooltipEl) {
@@ -4251,7 +4466,11 @@ function showMiniElevation() {
   loading.innerHTML = '<div class="elev-spin"></div> Loading…';
   loading.style.display = 'flex';
 
-  buildElevationProfile().then(() => {
+  buildElevationProfile(false, html => {
+    if (elevFetchGen !== myGen) return;
+    loading.innerHTML = html.replace('<div class="elev-spin"></div> ', '<div class="elev-spin"></div> ');
+    loading.style.display = 'flex';
+  }).then(() => {
     if (elevFetchGen !== myGen) return; // stale — a newer fetch is running
     loading.style.display = 'none';
     requestAnimationFrame(() => {
@@ -4260,7 +4479,8 @@ function showMiniElevation() {
     });
   }).catch(() => {
     if (elevFetchGen !== myGen) return;
-    loading.innerHTML = '⚠ Unavailable';
+    loading.innerHTML = `<span style="font-size:11px;display:flex;align-items:center;gap:5px;">⚠ Unavailable <button onclick="this.closest('#trail-mini-elev').querySelector('#trail-mini-elev-loading').innerHTML='<div class=elev-spin></div> Retrying…';elevState.points=[];scheduleMiniElevationBuild()" style="padding:1px 6px;border-radius:99px;border:1.5px solid var(--orange);background:transparent;font-size:10px;font-weight:700;color:var(--orange);cursor:pointer;">Retry</button></span>`;
+    loading.style.display = 'flex';
   });
 }
 
@@ -4308,7 +4528,11 @@ function showInlineElevation() {
   loading.innerHTML = '<div class="elev-spin"></div> Loading elevation…';
   loading.style.display = 'flex';
 
-  buildElevationProfile().then(() => {
+  buildElevationProfile(false, html => {
+    if (tscElevFetchGen !== myGen) return;
+    loading.innerHTML = html;
+    loading.style.display = 'flex';
+  }).then(() => {
     if (tscElevFetchGen !== myGen) return;
     loading.style.display = 'none';
     requestAnimationFrame(() => {
@@ -4317,12 +4541,205 @@ function showInlineElevation() {
     });
   }).catch(() => {
     if (tscElevFetchGen !== myGen) return;
-    loading.innerHTML = '⚠ Elevation unavailable';
+    loading.innerHTML = `<span style="font-size:11px;display:flex;align-items:center;gap:6px;">⚠ Unavailable <button id="tsc-elev-retry-btn" style="padding:2px 8px;border-radius:var(--radius-full);border:1.5px solid var(--orange);background:transparent;font-family:var(--font);font-size:11px;font-weight:600;color:var(--orange);cursor:pointer;">Retry</button></span>`;
+    loading.style.display = 'flex';
+    document.getElementById('tsc-elev-retry-btn')?.addEventListener('click', () => {
+      elevState.points = []; elevState.totalDist = 0;
+      ++tscElevFetchGen; // invalidate prior generation
+      showInlineElevation();
+    }, { once: true });
   });
 }
 
 // Also rebuild elevation profile when a route is loaded from the library
 // (handled directly in restoreRouteData)
+
+// ════════════════════════════════════════════════════════════
+// RIGHT-CLICK CONTEXT MENU (Leaflet popup — geo-anchored)
+// ════════════════════════════════════════════════════════════
+
+let ctxLatLng = null;
+let ctxPopup  = null;
+
+function buildCtxMenuEl(latlng) {
+  const el = document.createElement('div');
+  el.className = 'ctx-popup-content';
+
+  const measureLabel = measureState.active ? 'Add measurement point' : 'Measure from here';
+
+  el.innerHTML = `
+    <div class="ctx-popup-header">
+      <span class="ctx-popup-label">Map options</span>
+      <button class="ctx-popup-close" title="Close">&#x2715;</button>
+    </div>
+    <div class="ctx-popup-items">
+      <button class="ctx-item ctx-measure-btn">
+        <span class="ctx-icon">📏</span>${measureLabel}
+      </button>
+      <div class="ctx-separator"></div>
+      <button class="ctx-item ctx-osm-btn">
+        <span class="ctx-icon">🗺</span>Open in OpenStreetMap
+      </button>
+    </div>`;
+
+  // Wire close
+  el.querySelector('.ctx-popup-close').addEventListener('click', hideCtxMenu);
+
+  // Wire OSM
+  el.querySelector('.ctx-osm-btn').addEventListener('click', () => {
+    hideCtxMenu();
+    const zoom = map.getZoom();
+    window.open(
+      `https://www.openstreetmap.org/#map=${zoom}/${latlng.lat.toFixed(6)}/${latlng.lng.toFixed(6)}`,
+      '_blank', 'noopener'
+    );
+  });
+
+  // Wire measure
+  el.querySelector('.ctx-measure-btn').addEventListener('click', () => {
+    hideCtxMenu();
+    if (!measureState.active) {
+      startMeasurement(latlng);
+    } else {
+      addMeasurePoint(latlng);
+    }
+  });
+
+  return el;
+}
+
+function showCtxMenu(latlng) {
+  ctxLatLng = latlng;
+
+  if (!ctxPopup) {
+    ctxPopup = L.popup({
+      closeButton: false,
+      className:   'ctx-popup',
+      offset:      L.point(0, 0),
+      autoPan:     false,
+      maxWidth:    210,
+      minWidth:    170,
+    });
+  }
+
+  ctxPopup
+    .setLatLng(latlng)
+    .setContent(buildCtxMenuEl(latlng))
+    .openOn(map);
+}
+
+function hideCtxMenu() {
+  if (ctxPopup && map.hasLayer(ctxPopup)) map.closePopup(ctxPopup);
+}
+
+// Right-click opens context popup
+map.on('contextmenu', (e) => {
+  if (e.originalEvent) e.originalEvent.preventDefault();
+  showCtxMenu(e.latlng);
+});
+
+// Esc closes it
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideCtxMenu();
+});
+
+// ════════════════════════════════════════════════════════════
+// MEASUREMENT TOOL
+// ════════════════════════════════════════════════════════════
+
+// (measureState is declared earlier, before the map click handler)
+
+function startMeasurement(latlng) {
+  // Clear any previous measurement
+  clearMeasurement(false);
+
+  measureState.active = true;
+  measureState.points = [{ lat: latlng.lat, lng: latlng.lng }];
+  measureState.totalDist = 0;
+
+  // Origin dot
+  measureState.startMarker = L.circleMarker([latlng.lat, latlng.lng], {
+    radius: 6, color: '#d97706', fillColor: '#f59e0b', fillOpacity: 1, weight: 2.5
+  }).addTo(map);
+
+  document.body.classList.add('measure-mode');
+  document.getElementById('measure-bar').classList.add('show');
+  updateMeasureBar();
+  toast('📏 Click to measure · Right-click for options · Esc to stop', 3500);
+}
+
+function addMeasurePoint(latlng) {
+  if (!measureState.active || measureState.points.length === 0) return;
+  const prev = measureState.points[measureState.points.length - 1];
+  const dist = haversineM(prev.lat, prev.lng, latlng.lat, latlng.lng);
+  measureState.totalDist += dist;
+  measureState.points.push({ lat: latlng.lat, lng: latlng.lng });
+
+  // Draw segment polyline
+  const line = L.polyline([[prev.lat, prev.lng], [latlng.lat, latlng.lng]], {
+    color: '#d97706', weight: 2.5, opacity: 0.85, dashArray: '6, 4', interactive: false
+  }).addTo(map);
+  measureState.polylines.push(line);
+
+  // Segment label at midpoint
+  const midLat = (prev.lat + latlng.lat) / 2;
+  const midLng = (prev.lng + latlng.lng) / 2;
+  const segLabel = L.marker([midLat, midLng], {
+    icon: L.divIcon({
+      className: '',
+      html: `<div class="measure-label">${fmtDist(dist)}</div>`,
+      iconSize: null, iconAnchor: [0, 0]
+    }),
+    interactive: false, zIndexOffset: 2500
+  }).addTo(map);
+  measureState.labels.push(segLabel);
+
+  // Endpoint dot
+  const dot = L.circleMarker([latlng.lat, latlng.lng], {
+    radius: 5, color: '#d97706', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
+  }).addTo(map);
+  measureState.labels.push(dot); // reuse labels array to track all cleanup items
+
+  updateMeasureBar();
+}
+
+function updateMeasureBar() {
+  document.getElementById('measure-total').textContent =
+    measureState.points.length <= 1
+      ? 'Click map to start measuring'
+      : fmtDist(measureState.totalDist);
+  document.getElementById('measure-hint').textContent =
+    measureState.points.length <= 1
+      ? 'Click on the map to add points'
+      : `${measureState.points.length} points · Right-click to add more`;
+}
+
+function clearMeasurement(toast_ = true) {
+  measureState.active = false;
+  measureState.points = [];
+  measureState.totalDist = 0;
+  if (measureState.startMarker) { map.removeLayer(measureState.startMarker); measureState.startMarker = null; }
+  measureState.polylines.forEach(p => map.removeLayer(p)); measureState.polylines = [];
+  measureState.labels.forEach(l => map.removeLayer(l)); measureState.labels = [];
+  document.body.classList.remove('measure-mode');
+  document.getElementById('measure-bar').classList.remove('show');
+  if (toast_) toast('Measurement cleared');
+}
+
+// Map click while measuring adds a point
+map.on('click', (e) => {
+  if (measureState.active) {
+    addMeasurePoint(e.latlng);
+  }
+});
+
+// Right-click while measuring: still show context menu (handled above)
+// Esc stops measuring
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && measureState.active) clearMeasurement();
+});
+
+document.getElementById('measure-clear-btn').addEventListener('click', () => clearMeasurement());
 
 // ════════════════════════════════════════════════════════════
 // LOADER
