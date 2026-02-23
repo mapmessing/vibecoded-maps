@@ -54,6 +54,14 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 /* ─── MAP ─── */
 #map { position: fixed; inset: 0; z-index: 0; }
 body.trail-mode #map { cursor: crosshair; }
+body.freeform-mode #map { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='4' fill='%2316a34a' opacity='0.9'/%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='%2316a34a' stroke-width='1.5' opacity='0.5'/%3E%3C/svg%3E") 12 12, crosshair; }
+
+/* Freeform toggle button active state */
+.trail-action-btn.freeform-active {
+  background: var(--orange-light);
+  color: var(--orange);
+  border: 1.5px solid var(--orange);
+}
 
 /* ─── LEAFLET OVERRIDES ─── */
 .leaflet-control-zoom {
@@ -480,7 +488,7 @@ body.measure-mode #map { cursor: crosshair !important; }
 #route-summary-card.show { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
 
 #rsc-info {
-  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  display: flex; align-items: baseline; gap: 8px; flex: 1; min-width: 0;
 }
 #rsc-profile { font-size: 18px; flex-shrink: 0; }
 #rsc-time { font-size: 19px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; }
@@ -502,9 +510,9 @@ body.measure-mode #map { cursor: crosshair !important; }
 /* ─── INSTRUCTIONS PANEL ─── */
 #instructions-panel {
   position: fixed;
-  right: -380px;
+  right: -400px;
   top: 16px;
-  bottom: 80px;
+  max-height: calc(100dvh - 96px);
   width: min(360px, calc(100vw - 32px));
   z-index: 950;
   background: var(--white);
@@ -833,7 +841,7 @@ body.measure-mode #map { cursor: crosshair !important; }
   background: var(--white); border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl); border: 1.5px solid var(--trail);
   padding: 8px 10px 8px 14px;
-  min-width: 0; max-width: min(620px, calc(100vw - 32px));
+  min-width: 0; max-width: min(800px, calc(100vw - 32px));
   width: max-content;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -856,17 +864,17 @@ body.measure-mode #map { cursor: crosshair !important; }
 /* Action buttons */
 #tsc-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .tsc-btn {
-  padding: 6px 10px; border-radius: var(--radius-full);
+  padding: 8px 14px; border-radius: var(--radius-full);
   border: 1.5px solid var(--border); background: transparent;
-  font-family: var(--font); font-size: 12px; font-weight: 600;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
   cursor: pointer; transition: all var(--tr); color: var(--text-primary);
-  white-space: nowrap; display: flex; align-items: center; gap: 4px;
+  white-space: nowrap; display: flex; align-items: center; gap: 5px;
 }
 .tsc-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 .tsc-btn.danger:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
 .tsc-btn.primary { background: var(--trail); border-color: var(--trail); color: white; }
 .tsc-btn.primary:hover { background: #15803d; border-color: #15803d; }
-.tsc-btn.icon-only { padding: 6px 8px; }
+.tsc-btn.icon-only { padding: 8px 10px; }
 
 /* Keep .route-action-btn for any leftover uses */
 .route-action-btn {
@@ -892,16 +900,28 @@ body.measure-mode #map { cursor: crosshair !important; }
 .marker-shadow { width: 10px; height: 4px; background: rgba(0,0,0,0.15); border-radius: 50%; margin-top: 2px; }
 
 .trail-marker-el {
-  width: 24px; height: 24px; border-radius: 50%;
+  width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  border: 2px solid rgba(255,255,255,0.85); cursor: pointer;
+  font-size: 12px; font-weight: 700; color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  border: 2.5px solid rgba(255,255,255,0.9); cursor: pointer;
   transition: transform var(--tr), opacity var(--tr);
   font-family: var(--font);
-  opacity: 0.78;
+  opacity: 0.92;
 }
-.trail-marker-el:hover { transform: scale(1.15); opacity: 1; }
+.trail-marker-el:hover { transform: scale(1.18); opacity: 1; }
+/* Intermediate (non-endpoint) waypoints — smaller + more translucent */
+.trail-marker-el.is-mid {
+  width: 18px; height: 18px; font-size: 9px;
+  border-width: 2px; opacity: 0.62;
+}
+.trail-marker-el.is-mid:hover { opacity: 0.88; }
+/* Finished (locked) intermediate waypoints — smaller + translucent but still readable */
+.trail-marker-el.is-mid.is-locked {
+  width: 13px; height: 13px; font-size: 0px;
+  border-width: 1.5px; opacity: 0.36; cursor: default;
+}
+.trail-marker-el.is-mid.is-locked:hover { opacity: 0.50; transform: none; }
 
 .loc-dot {
   width: 16px; height: 16px; border-radius: 50%;
@@ -1418,6 +1438,8 @@ body.measure-mode #map { cursor: crosshair !important; }
   #card-go-btn        { display: none !important; }
   #trail-card-nav-btn { display: none !important; }
   #nav-bar            { display: none !important; }
+  /* Zoom controls replaced by scroll/keyboard on desktop */
+  .leaflet-control-zoom { display: none !important; }
 }
 </style>
 </head>
@@ -2404,6 +2426,8 @@ let routeSteps = [], currentStepIdx = 0;
 let routeCoordinates = []; // lat/lng array for GPS nav
 let navigationActive = false;
 let gpsWatchId = null;
+let dirArrowMarkers = [];      // arrow chevron markers for the directions route
+let trailArrowDecorators = []; // kept for cleanup compat (now stores per-segment arrays)
 
 const fromInput = document.getElementById('from-input');
 const toInput   = document.getElementById('to-input');
@@ -2578,6 +2602,15 @@ function calcDirectionsRoute(from, to) {
     document.getElementById('route-summary-card').classList.add('show');
     closeRoutePanel();
     toast(`${fmtDist(dist)} · ${fmtTime(time)} ✓`);
+
+    // Native arrow chevrons using route coordinates
+    setTimeout(() => {
+      removeArrowMarkers(dirArrowMarkers);
+      const coords = (routeCoordinates || []).map(c => [c.lat, c.lng]);
+      if (coords.length >= 2) {
+        dirArrowMarkers = drawArrowMarkers(coords, '#1d4ed8');
+      }
+    }, 200);
   });
 
   routingControl.on('routingerror', () => toast('Could not find a route between these points'));
@@ -2595,6 +2628,7 @@ document.getElementById('card-clear-btn').addEventListener('click', clearDirecti
 document.getElementById('card-go-btn').addEventListener('click', () => startNavigation(null, 'directions'));
 
 function clearDirectionsRoute() {
+  removeArrowMarkers(dirArrowMarkers);
   if (routingControl) { map.removeControl(routingControl); routingControl = null; }
   routeFrom = null; routeTo = null;
   fromInput.value = ''; toInput.value = '';
@@ -2768,6 +2802,92 @@ function haversineM(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// ─── bearing between two latlng points (degrees, 0=north, CW) ───
+function getBearing(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const dLng = toRad(lng2 - lng1);
+  const la1 = toRad(lat1), la2 = toRad(lat2);
+  const y = Math.sin(dLng) * Math.cos(la2);
+  const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+}
+
+// ─── draw SVG chevron arrow markers at regular distance intervals ───
+// coords: array of [lat,lng] or {lat,lng}  ·  color: hex string
+// Returns array of L.marker to be stored and removed later
+function drawArrowMarkers(coords, color, intervalM = 160) {
+  const markers = [];
+  if (!coords || coords.length < 2) return markers;
+
+  // Normalise to [lat,lng] pairs
+  const pts = coords.map(c => Array.isArray(c) ? c : [c.lat, c.lng]);
+
+  // Place first arrow after a half-interval offset so it doesn't sit on the start dot
+  let accumDist = intervalM * 0.40;
+
+  for (let i = 1; i < pts.length; i++) {
+    const [lat0, lng0] = pts[i - 1];
+    const [lat1, lng1] = pts[i];
+    const segDist = haversineM(lat0, lng0, lat1, lng1);
+    if (segDist < 1) continue;
+
+    while (accumDist <= segDist) {
+      const frac  = accumDist / segDist;
+      const aLat  = lat0 + frac * (lat1 - lat0);
+      const aLng  = lng0 + frac * (lng1 - lng0);
+      const deg   = getBearing(lat0, lng0, lat1, lng1);
+
+      // Chevron SVG: semi-transparent white so it reads on any line colour
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11"
+          style="display:block;transform:rotate(${deg}deg);transform-origin:5.5px 5.5px;">
+        <polyline points="2,8 5.5,3 9,8" fill="none" stroke="rgba(255,255,255,0.72)"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+
+      const m = L.marker([aLat, aLng], {
+        icon: L.divIcon({
+          className: '', html: svg,
+          iconSize: [11, 11], iconAnchor: [5.5, 5.5]
+        }),
+        interactive: false, zIndexOffset: 200
+      }).addTo(map);
+      markers.push(m);
+      accumDist += intervalM;
+    }
+    accumDist -= segDist;
+  }
+  return markers;
+}
+
+// ─── Remove an array of arrow markers from the map ───
+function removeArrowMarkers(arr) {
+  if (!arr) return;
+  arr.forEach(m => { try { map.removeLayer(m); } catch(e) {} });
+  arr.length = 0;
+}
+
+// ─── Snap a latlng to the nearest OSM road/path (≤ SNAP_MAX_M metres) ───
+const SNAP_MAX_M = 25;
+
+async function snapToRoad(lat, lng, profile) {
+  // In freeform mode we never snap
+  if (trailState.freeform) return [lat, lng];
+  try {
+    const svc = profile === 'car'
+      ? `https://router.project-osrm.org/nearest/v1/driving/${lng.toFixed(6)},${lat.toFixed(6)}?number=1`
+      : `https://routing.openstreetmap.de/routed-${profile}/nearest/v1/${profile}/${lng.toFixed(6)},${lat.toFixed(6)}?number=1`;
+    const resp = await fetch(svc, { signal: AbortSignal.timeout(3000) });
+    if (!resp.ok) return [lat, lng];
+    const data = await resp.json();
+    const wp = data.waypoints && data.waypoints[0];
+    if (!wp) return [lat, lng];
+    const [sLng, sLat] = wp.location;
+    const dist = haversineM(lat, lng, sLat, sLng);
+    if (dist <= SNAP_MAX_M) return [sLat, sLng];
+  } catch (e) { /* silent — fall back to raw coords */ }
+  return [lat, lng];
+}
+
 function stopNavigation() {
   navigationActive = false;
   document.getElementById('nav-bar').classList.remove('open');
@@ -2827,6 +2947,7 @@ document.addEventListener('keydown', e => {
 const trailState = {
   isActive: false,
   isLocked: false,  // true when route is finished and Edit has not been pressed
+  freeform: false,  // true when freeform draw mode is on (no road snapping/routing)
   waypoints: [],
   segments: [],
   totalDist: 0,
@@ -2873,6 +2994,10 @@ function closeTrailPanel(force) {
   document.getElementById('search-bar').classList.remove('hidden');
   document.getElementById('trail-btn').classList.remove('trail-active');
   document.body.classList.remove('trail-mode');
+  document.body.classList.remove('freeform-mode');
+  // Reset freeform state
+  trailState.freeform = false;
+  document.getElementById('trail-freeform-btn')?.classList.remove('freeform-active');
   setWpListOpen(false);
   hideHint();
   // Hide mini elevation when panel closes
@@ -2915,7 +3040,12 @@ document.querySelectorAll('.trail-transport-btn').forEach(btn => {
     // Re-route all existing segments
     if (trailState.segments.length > 0) {
       toast('Recalculating route…');
-      trailState.segments.forEach(s => { if (s.routingCtrl) map.removeControl(s.routingCtrl); });
+      trailState.segments.forEach(s => {
+        if (s.routingCtrl) map.removeControl(s.routingCtrl);
+        if (s.polyline) { try { map.removeLayer(s.polyline); } catch(e) {} }
+        removeArrowMarkers(s.arrowMarkers);
+      });
+      trailArrowDecorators = [];
       trailState.segments = [];
       for (let i = 0; i < trailState.waypoints.length - 1; i++) {
         const seg = await buildTrailSegment(trailState.waypoints[i].latlng, trailState.waypoints[i+1].latlng);
@@ -2960,8 +3090,24 @@ function buildTrailSegment(fromLL, toLL) {
       if (resolved) return;
       resolved = true;
       const route = e.routes[0];
-      // Attach click handler to route line for inserting waypoints
+      const segData = {
+        routingCtrl: ctrl,
+        dist: route.summary.totalDistance,
+        time: route.summary.totalTime,
+        steps: route.instructions || [],
+        arrowMarkers: [],
+        freeform: false
+      };
+
+      // Attach click handler + draw native arrow chevrons
       setTimeout(() => {
+        // Arrow chevrons: extract coords from routing result
+        const coords = route.coordinates ? route.coordinates.map(c => [c.lat, c.lng]) : [];
+        if (coords.length >= 2) {
+          segData.arrowMarkers = drawArrowMarkers(coords, '#15803d');
+        }
+
+        // Click-to-insert on the route polyline
         if (ctrl._line) {
           ctrl._line.eachLayer(layer => {
             if (layer instanceof L.Polyline) {
@@ -2975,9 +3121,9 @@ function buildTrailSegment(fromLL, toLL) {
             }
           });
         }
-      }, 150);
-      // Resolve with data — caller is responsible for pushing to segments then recalculating
-      resolve({ routingCtrl: ctrl, dist: route.summary.totalDistance, time: route.summary.totalTime, steps: route.instructions || [] });
+      }, 180);
+
+      resolve(segData);
     });
 
     ctrl.on('routingerror', () => {
@@ -2985,8 +3131,41 @@ function buildTrailSegment(fromLL, toLL) {
       resolved = true;
       const d = map.distance(L.latLng(fromLL[0], fromLL[1]), L.latLng(toLL[0], toLL[1]));
       const speedMs = profile === 'car' ? 13.9 : profile === 'bike' ? 4.2 : 1.4;
-      resolve({ routingCtrl: ctrl, dist: d, time: d / speedMs, steps: [] });
+      resolve({ routingCtrl: ctrl, dist: d, time: d / speedMs, steps: [], arrowMarkers: [], freeform: false });
     });
+  });
+}
+
+// ─── Freeform segment: straight-line polyline, no OSRM routing ───
+function buildFreeformSegment(fromLL, toLL) {
+  const profile = trailState.profile;
+  const speedMs = profile === 'car' ? 13.9 : profile === 'bike' ? 4.2 : 1.4;
+  const dist = haversineM(fromLL[0], fromLL[1], toLL[0], toLL[1]);
+  const coords = [fromLL, toLL];
+
+  const polyline = L.polyline(coords, {
+    color: '#d97706', weight: 4, opacity: 0.82, dashArray: '8 5', interactive: true
+  }).addTo(map);
+
+  const arrowMarkers = drawArrowMarkers(coords, '#b45309');
+
+  // Click-to-insert on freeform line
+  polyline.on('click', function(ev) {
+    if (!trailState.isActive || trailRoutingInProgress) return;
+    const segIdx = trailState.segments.findIndex(s => s.polyline === polyline);
+    if (segIdx < 0) return;
+    L.DomEvent.stopPropagation(ev);
+    insertTrailWaypoint(segIdx + 1, ev.latlng);
+  });
+
+  return Promise.resolve({
+    routingCtrl: null,
+    polyline,
+    dist,
+    time: dist / speedMs,
+    steps: [],
+    arrowMarkers,
+    freeform: true
   });
 }
 
@@ -2995,8 +3174,13 @@ async function rerouteSegment(segIdx) {
   const toWP   = trailState.waypoints[segIdx + 1];
   if (!fromWP || !toWP) return;
   const oldSeg = trailState.segments[segIdx];
-  if (oldSeg && oldSeg.routingCtrl) map.removeControl(oldSeg.routingCtrl);
-  const newSeg = await buildTrailSegment(fromWP.latlng, toWP.latlng);
+  if (oldSeg) {
+    if (oldSeg.routingCtrl) map.removeControl(oldSeg.routingCtrl);
+    if (oldSeg.polyline) { try { map.removeLayer(oldSeg.polyline); } catch(e) {} }
+    removeArrowMarkers(oldSeg.arrowMarkers);
+  }
+  const builder = trailState.freeform ? buildFreeformSegment : buildTrailSegment;
+  const newSeg = await builder(fromWP.latlng, toWP.latlng);
   trailState.segments[segIdx] = newSeg;
   recalcTrailTotals();
   updateTrailStats();
@@ -3005,10 +3189,14 @@ async function rerouteSegment(segIdx) {
 
 function makeTrailWaypointMarker(latlng, index) {
   const { color, label } = trailMarkerStyle(index, trailState.waypoints.length);
+  // index 0 = start (endpoint); others are initially intermediate (refreshed by refreshTrailMarkerIcons)
+  const isEndpoint = index === 0;
+  const size = isEndpoint ? 26 : 18;
+  const cls  = isEndpoint ? 'trail-marker-el' : 'trail-marker-el is-mid';
   const icon = L.divIcon({
     className: '',
-    html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
-    iconSize: [24,24], iconAnchor: [12,12], popupAnchor: [0,-16]
+    html: `<div class="${cls}" style="background:${color};cursor:grab">${label}</div>`,
+    iconSize: [size,size], iconAnchor: [size/2,size/2], popupAnchor: [0,-size]
   });
   const marker = L.marker(latlng, { icon, draggable: true, autoPan: true, zIndexOffset: 500 }).addTo(map);
 
@@ -3065,13 +3253,20 @@ function trailMarkerStyle(index, total) {
 }
 
 function refreshTrailMarkerIcons() {
-  const total = trailState.waypoints.length;
+  const total  = trailState.waypoints.length;
+  const locked = trailState.isLocked;
   trailState.waypoints.forEach((wp, i) => {
     const { color, label } = trailMarkerStyle(i, total);
+    const isEndpoint = i === 0 || (i === total - 1 && total > 1);
+    const cls  = isEndpoint ? 'trail-marker-el'
+               : locked     ? 'trail-marker-el is-mid is-locked'
+               :               'trail-marker-el is-mid';
+    const size = isEndpoint ? 26 : locked ? 13 : 18;
+    const cur  = locked && !isEndpoint ? 'default' : 'grab';
     wp.marker.setIcon(L.divIcon({
       className: '',
-      html: `<div class="trail-marker-el" style="background:${color};cursor:grab">${label}</div>`,
-      iconSize: [24,24], iconAnchor: [12,12], popupAnchor: [0,-16]
+      html: `<div class="${cls}" style="background:${color};cursor:${cur}">${label}</div>`,
+      iconSize: [size,size], iconAnchor: [size/2,size/2], popupAnchor: [0,-size]
     }));
   });
 }
@@ -3085,6 +3280,8 @@ async function removeTrailWaypoint(index) {
   destroy.sort((a, b) => b - a).forEach(si => {
     const seg = trailState.segments[si];
     if (seg && seg.routingCtrl) map.removeControl(seg.routingCtrl);
+    if (seg && seg.polyline) { try { map.removeLayer(seg.polyline); } catch(e) {} }
+    if (seg) removeArrowMarkers(seg.arrowMarkers);
     trailState.segments.splice(si, 1);
   });
   trailState.waypoints.splice(index, 1);
@@ -3109,8 +3306,11 @@ async function insertTrailWaypoint(insertAt, latlng) {
   const segIdx = insertAt - 1; // segment between insertAt-1 and insertAt
 
   // Remove existing segment
-  if (trailState.segments[segIdx] && trailState.segments[segIdx].routingCtrl) {
-    map.removeControl(trailState.segments[segIdx].routingCtrl);
+  if (trailState.segments[segIdx]) {
+    const oldSeg = trailState.segments[segIdx];
+    if (oldSeg.routingCtrl) map.removeControl(oldSeg.routingCtrl);
+    if (oldSeg.polyline) { try { map.removeLayer(oldSeg.polyline); } catch(e) {} }
+    removeArrowMarkers(oldSeg.arrowMarkers);
   }
 
   // Create new marker and insert waypoint
@@ -3124,8 +3324,9 @@ async function insertTrailWaypoint(insertAt, latlng) {
   // Build two new segments replacing the old one
   const prevWP = trailState.waypoints[insertAt - 1];
   const nextWP = trailState.waypoints[insertAt + 1];
-  const segA = await buildTrailSegment(prevWP.latlng, [lat, lng]);
-  const segB = await buildTrailSegment([lat, lng], nextWP.latlng);
+  const builder = trailState.freeform ? buildFreeformSegment : buildTrailSegment;
+  const segA = await builder(prevWP.latlng, [lat, lng]);
+  const segB = await builder([lat, lng], nextWP.latlng);
 
   trailState.segments.splice(segIdx, 1, segA, segB);
   trailRoutingInProgress = false;
@@ -3143,7 +3344,13 @@ async function insertTrailWaypoint(insertAt, latlng) {
 
 async function handleTrailClick(latlng) {
   if (trailRoutingInProgress) return;
-  const lat = latlng.lat, lng = latlng.lng;
+
+  // ── Snap to nearest OSM road (unless freeform or restoring) ──
+  let lat = latlng.lat, lng = latlng.lng;
+  if (!trailState._isRestoring && !trailState.freeform) {
+    [lat, lng] = await snapToRoad(lat, lng, trailState.profile);
+  }
+
   let name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   nominatimReverse(lat, lng).then(r => {
     if (!r) return;
@@ -3163,13 +3370,21 @@ async function handleTrailClick(latlng) {
   if (prevCount >= 1) {
     trailRoutingInProgress = true;
     refreshTrailMarkerIcons();
-    toast('Routing…');
     const prev = trailState.waypoints[prevCount - 1];
-    const seg = await buildTrailSegment(prev.latlng, [lat, lng]);
-    trailState.segments.push(seg);
-    recalcTrailTotals();          // recalc AFTER push — stats now reflect this segment
-    trailRoutingInProgress = false;
-    toast(`+${fmtDist(seg.dist)}`);
+    if (trailState.freeform) {
+      const seg = await buildFreeformSegment(prev.latlng, [lat, lng]);
+      trailState.segments.push(seg);
+      recalcTrailTotals();
+      trailRoutingInProgress = false;
+      toast(`✏️ +${fmtDist(seg.dist)}`);
+    } else {
+      toast('Routing…');
+      const seg = await buildTrailSegment(prev.latlng, [lat, lng]);
+      trailState.segments.push(seg);
+      recalcTrailTotals();          // recalc AFTER push — stats now reflect this segment
+      trailRoutingInProgress = false;
+      toast(`+${fmtDist(seg.dist)}`);
+    }
   } else {
     refreshTrailMarkerIcons();
   }
@@ -3234,6 +3449,8 @@ document.getElementById('trail-undo-btn').addEventListener('click', () => {
   if (trailState.segments.length > 0) {
     const seg = trailState.segments.pop();
     if (seg.routingCtrl) map.removeControl(seg.routingCtrl);
+    if (seg.polyline) { try { map.removeLayer(seg.polyline); } catch(e) {} }
+    removeArrowMarkers(seg.arrowMarkers);
   }
   refreshTrailMarkerIcons();
   recalcTrailTotals();
@@ -3246,7 +3463,12 @@ document.getElementById('trail-clear-btn').addEventListener('click', clearTrailR
 
 function clearTrailRouteInternal() {
   trailState.waypoints.forEach(wp => map.removeLayer(wp.marker));
-  trailState.segments.forEach(seg => { if (seg.routingCtrl) map.removeControl(seg.routingCtrl); });
+  trailState.segments.forEach(seg => {
+    if (seg.routingCtrl) map.removeControl(seg.routingCtrl);
+    if (seg.polyline) { try { map.removeLayer(seg.polyline); } catch(e) {} }
+    removeArrowMarkers(seg.arrowMarkers);
+  });
+  trailArrowDecorators = [];
   trailState.waypoints = [];
   trailState.segments = [];
   trailState.totalDist = 0;
@@ -3255,6 +3477,9 @@ function clearTrailRouteInternal() {
   trailState._isDirty = false;
   trailState._isRestoring = false;
   trailState.isLocked = false;
+  trailState.freeform = false;
+  document.getElementById('trail-freeform-btn')?.classList.remove('freeform-active');
+  document.body.classList.remove('freeform-mode');
   document.getElementById('trail-summary-card').classList.remove('show');
   document.getElementById('trail-summary-card').classList.remove('elev-open');
   document.getElementById('instructions-panel').classList.remove('open');
@@ -3282,6 +3507,7 @@ document.getElementById('trail-finish-btn').addEventListener('click', () => {
   trailState.waypoints.forEach(wp => {
     if (wp.marker && wp.marker.dragging) wp.marker.dragging.disable();
   });
+  refreshTrailMarkerIcons(); // shrink/fade intermediate markers
 
   // Update compact summary card
   const routeName = document.getElementById('trail-name-input').value.trim() || defaultRouteName();
@@ -3307,9 +3533,19 @@ document.getElementById('trail-finish-btn').addEventListener('click', () => {
   } catch(e) {}
 
   // Pre-fetch elevation data so 📈 opens instantly
+  // Also re-trigger inline elevation if it was already open (route was edited and re-finished)
+  const _tscCard = document.getElementById('trail-summary-card');
+  const _elevWasOpen = _tscCard.classList.contains('elev-open');
+  _tscCard.classList.remove('elev-open'); // always close first so it re-renders fresh
   elevState.points = [];
   elevState.totalDist = 0;
-  buildElevationProfile(); // silent — no panel shown
+
+  if (_elevWasOpen) {
+    // Re-open and fetch fresh data for the new/edited route
+    showInlineElevation();
+  } else {
+    buildElevationProfile(); // silent pre-fetch — no panel shown
+  }
 });
 
 // Trail summary card actions
@@ -3319,6 +3555,7 @@ document.getElementById('trail-card-edit-btn').addEventListener('click', () => {
   trailState.waypoints.forEach(wp => {
     if (wp.marker && wp.marker.dragging) wp.marker.dragging.enable();
   });
+  refreshTrailMarkerIcons(); // restore normal intermediate marker sizes
   document.getElementById('trail-summary-card').classList.remove('show');
   openTrailPanel();
 });
@@ -3916,6 +4153,28 @@ document.getElementById('routes-panel-close').addEventListener('click', closeRou
 
 document.getElementById('trail-library-btn').addEventListener('click', openRoutesPanel);
 
+/* ── FREEFORM DRAW MODE (temporarily disabled — button removed from toolbar)
+   Re-enable by swapping trail-library-btn back to trail-freeform-btn in HTML
+   and uncommenting this listener block. ──────────────────────────────────────
+document.getElementById('trail-freeform-btn').addEventListener('click', () => {
+  if (trailState.waypoints.length > 0) {
+    toast('Cannot toggle freeform after placing points — clear first');
+    return;
+  }
+  trailState.freeform = !trailState.freeform;
+  const btn = document.getElementById('trail-freeform-btn');
+  btn.classList.toggle('freeform-active', trailState.freeform);
+  document.body.classList.toggle('freeform-mode', trailState.freeform);
+  if (trailState.freeform) {
+    toast('✏️ Freeform mode — straight lines, no snapping · click to draw');
+    showHint('✏️ Freeform draw mode — click to place points freely', true);
+  } else {
+    toast('Freeform off — road snapping restored');
+    showHint('🗺 Plan Route — click map to add waypoints', true);
+  }
+});
+──────────────────────────────────────────────────────────────────────────── */
+
 // Search bar routes button
 document.getElementById('search-routes-btn').addEventListener('click', openRoutesPanel);
 
@@ -4143,7 +4402,7 @@ async function buildElevationProfile(showPanel = false, onStatus = null) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ locations }),
-      signal: AbortSignal.timeout(12000)
+      signal: AbortSignal.timeout(5000)
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
